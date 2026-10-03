@@ -27,8 +27,16 @@
 - **Plesk hatası 2:** `fatal: destination path 'C:\Inetpub\vhosts\ozoto.online\git\ozoto.git' already exists and is not an empty directory`
   - **Sebep:** İlk başarısız deneme sunucuda yarım bir `ozoto.git` klasörü bıraktı; aynı isimle tekrar klonlanamıyor.
   - **Çözüm:** Ya o klasör silinip tekrar denenecek, ya da formdaki *Repository name* farklı bir isim yapılacak (ör. `ozoto-web.git`).
-- **Document root** `public/` klasörü olacak (Plesk → Hosting Settings → Document root: `httpdocs\public`).
+- **Plesk Git bağlantısı kuruldu (04.10.2026):** repo `ozoto.git`, dal `main`, otomatik deploy yolu `\site`
+  (`C:\Inetpub\vhosts\ozoto.online\site`).
+- **Document root** kod yazılınca `site\public` yapılacak (Plesk → Hosting & DNS → Hosting Settings → Document root).
   Böylece kaynak kod, ayarlar, `.env`, bu notlar gibi dosyalar web'den erişilemez.
+  `public/` klasörü repoya girmeden değiştirilmemeli, yoksa site hata verir.
+- **Otomatik deploy için GitHub webhook:** Plesk'te repo ayarlarındaki *Webhook URL* kopyalanıp
+  GitHub → Settings → Webhooks'a eklenecek (olay: *push*). Plesk'in SSL sertifikası geçerli değilse
+  GitHub'da *SSL verification* kapatılması gerekebilir. Webhook yoksa güncellemeler Plesk'te **Pull now** ile çekilir.
+- **Plesk deneme lisansı 3 gün sonra bitiyor** (04.10.2026 itibarıyla). Lisans alınmazsa panel kilitlenir;
+  Git deploy ve ayarlar kullanılamaz.
 
 ### Sunucu Windows + IIS (önemli tespit)
 Hata mesajındaki `C:\Inetpub\vhosts\...` yolu sunucunun **Windows Plesk / IIS** olduğunu gösteriyor. Bunun projeye etkileri:
