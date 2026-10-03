@@ -118,10 +118,14 @@ yeni başvuruda e-posta / WhatsApp bildirimi, sistemin o araç için **otomatik 
 
 ## 7. Teknik mimari (taslak)
 
-- **PHP 8.4**, Composer (PSR-4 autoload), framework'süz hafif yapı → Plesk'te sorunsuz deploy.
-- **MySQL / MariaDB** (Plesk'te mevcut), PDO + hazırlanmış sorgular.
+- **PHP 8.4**, framework'süz ve Composer'sız hafif yapı (kendi PSR-4 autoloader'ı) → Plesk'te ek adım gerektirmeden deploy.
+- **MySQL / MariaDB** (önerilen) veya **SQLite**, PDO + hazırlanmış sorgular. Seçim kurulum sihirbazında yapılır.
 - Klasörler: `public/` (web kökü), `src/` (kod), `templates/`, `bin/` (cron komutları), `storage/` (log, yüklemeler), `config/`.
 - Cron işleri: kaynak tarama → normalize → mükerrer birleştirme → kelepir puanı → bildirim.
+- Faz 1 güvenlik önlemleri: CSRF, gizli bot alanı + süre tuzağı, IP başına başvuru/giriş sınırı, fotoğraf içerik doğrulaması,
+  fotoğraflar web kökü dışında, CSP ve güvenlik başlıkları, ham IP yerine özet (KVKK).
+- Ana sayfa ve SSS metinleri pazarlama vaatleri içerir ("çoğu zaman aynı gün", "sürpriz kesinti yok" vb.);
+  firmanın gerçek işleyişine göre gözden geçirilmeli. KVKK metni taslaktır, hukukçu kontrolünden geçmeli.
 
 ---
 
@@ -129,8 +133,8 @@ yeni başvuruda e-posta / WhatsApp bildirimi, sistemin o araç için **otomatik 
 
 | Faz | İçerik |
 |-----|--------|
-| 0 | Repo + `main` dalı, Plesk Git deploy, `public/` document root, SSL |
-| 1 | Ana sayfa + **başvuru formu** + yönetim paneli (en hızlı gelir/değer, SEO'ya erken başlar) |
+| 0 | Repo + `main` dalı, Plesk Git deploy ✅ · `public/` document root, SSL → [KURULUM.md](KURULUM.md) |
+| 1 | Ana sayfa + **başvuru formu** + yönetim paneli + kurulum sihirbazı ✅ kodlandı (04.10.2026) |
 | 2 | Veri toplama altyapısı (adaptörler, cron, kuyruk) + ilk yasal kaynaklar |
 | 3 | Kelepir puanı motoru + fiyat geçmişi + dolandırıcılık uyarısı |
 | 4 | SEO sayfaları (şehir/marka/model), sitemap, yapılandırılmış veri |
