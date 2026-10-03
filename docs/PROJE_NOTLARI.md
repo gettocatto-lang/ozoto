@@ -23,14 +23,24 @@
 - GitHub'a deploy key eklendi (adı: `ozoto`, **Read/write**). Plesk sadece çekme (pull) yapacağı için **read-only yeterli** — güvenlik için write yetkisi kaldırılabilir.
 - **Plesk hatası:** `gitmng failed: error: pathspec 'main' did not match any file(s) known to git`
   - **Sebep:** Repo tamamen boştu, `main` dalı (branch) yoktu. Plesk bulunmayan bir dalı çekmeye çalıştı.
-  - **Çözüm:** Repoya ilk commit atılıp `main` dalı oluşturulunca Plesk'te "Add Repository" tekrar denenecek.
-- **Document root** `public/` klasörü olacak (Plesk → Hosting Settings → Document root: `httpdocs/public`).
+  - **Çözüm:** `main` dalı oluşturuldu (03.10.2026).
+- **Plesk hatası 2:** `fatal: destination path 'C:\Inetpub\vhosts\ozoto.online\git\ozoto.git' already exists and is not an empty directory`
+  - **Sebep:** İlk başarısız deneme sunucuda yarım bir `ozoto.git` klasörü bıraktı; aynı isimle tekrar klonlanamıyor.
+  - **Çözüm:** Ya o klasör silinip tekrar denenecek, ya da formdaki *Repository name* farklı bir isim yapılacak (ör. `ozoto-web.git`).
+- **Document root** `public/` klasörü olacak (Plesk → Hosting Settings → Document root: `httpdocs\public`).
   Böylece kaynak kod, ayarlar, `.env`, bu notlar gibi dosyalar web'den erişilemez.
+
+### Sunucu Windows + IIS (önemli tespit)
+Hata mesajındaki `C:\Inetpub\vhosts\...` yolu sunucunun **Windows Plesk / IIS** olduğunu gösteriyor. Bunun projeye etkileri:
+- `.htaccess` **çalışmaz** → URL yönlendirme ve erişim engelleri **`web.config`** (IIS URL Rewrite) ile yapılacak.
+- Dosya yolları her yerde `DIRECTORY_SEPARATOR` / `__DIR__` ile kurulacak; Linux'a özel komut (`exec`, `chmod` vb.) kullanılmayacak.
+- Zamanlanmış görevler Plesk'te Windows görev zamanlayıcısı üzerinden `php.exe` ile çalışacak.
+- Yükleme klasörü (`storage/`) için IIS uygulama havuzu kullanıcısına yazma izni gerekecek.
 
 ### FastCGI'nin projeye etkisi
 - Web istekleri kısa sürmeli (FastCGI zaman aşımı). **Veri toplama (tarama) işleri web isteğinde çalışmayacak**;
-  Plesk **Zamanlanmış Görevler (cron)** ile PHP CLI üzerinden arka planda çalışacak.
-- Kalıcı süreç (daemon / websocket) yok; her şey cron + veritabanı kuyruğu ile çözülecek.
+  Plesk **Zamanlanmış Görevler** ile PHP CLI üzerinden arka planda çalışacak.
+- Kalıcı süreç (daemon / websocket) yok; her şey zamanlanmış görev + veritabanı kuyruğu ile çözülecek.
 
 ---
 
