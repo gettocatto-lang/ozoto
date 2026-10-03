@@ -6,6 +6,7 @@
 /storage/logs/*
 /storage/sessions/*
 /storage/*.sqlite
+/storage/schema-version
 !/storage/**/.gitkeep
 
 .DS_Store

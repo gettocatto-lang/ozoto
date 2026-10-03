@@ -15,6 +15,7 @@ templates/   Sayfa şablonları
 config/      app.php (varsayılanlar) + local.php (kurulumda oluşur, Git'e girmez)
 database/    MySQL ve SQLite şemaları
 storage/     Yüklenen fotoğraflar, oturumlar, loglar (web'den erişilemez)
+bin/         Komut satırı görevleri (radar.php: Radar toplayıcısı)
 ```
 
 ## Sayfalar
@@ -25,6 +26,9 @@ storage/     Yüklenen fotoğraflar, oturumlar, loglar (web'den erişilemez)
 | `/aracimi-hemen-sat` | Nakit teklif başvuru formu (fotoğraflı) |
 | `/kvkk` | KVKK aydınlatma metni |
 | `/yonetim` | Başvuru yönetim paneli |
+| `/yonetim/radar` | Kelepir Radar: değerlenmiş ilan listesi, filtre, sıralama, kayıtlı aramalar |
+| `/yonetim/radar/ayarlar` | Arama motoru taraması ve zamanlanmış görev adresi |
+| `/cron/radar?anahtar=…` | Zamanlanmış görev (Plesk "URL getir") |
 | `/kurulum` | Tek seferlik kurulum sihirbazı |
 | `/sitemap.xml` | Site haritası |
 

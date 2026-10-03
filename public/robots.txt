@@ -1,6 +1,7 @@
 User-agent: *
 Disallow: /yonetim
 Disallow: /kurulum
+Disallow: /cron
 Disallow: /basvuru-alindi
 
 Sitemap: https://ozoto.online/sitemap.xml

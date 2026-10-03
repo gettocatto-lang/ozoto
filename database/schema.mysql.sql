@@ -54,3 +54,88 @@ CREATE TABLE IF NOT EXISTS rate_limits (
     created_at DATETIME NOT NULL,
     KEY idx_rate_limits_lookup (bucket, key_hash, created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS settings (
+    name VARCHAR(80) NOT NULL PRIMARY KEY,
+    value TEXT NULL,
+    updated_at DATETIME NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS tsb_cache (
+    cache_key VARCHAR(80) NOT NULL PRIMARY KEY,
+    payload MEDIUMTEXT NOT NULL,
+    fetched_at DATETIME NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS radar_listings (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    source VARCHAR(30) NOT NULL,
+    site VARCHAR(60) NULL,
+    source_ref VARCHAR(100) NULL,
+    url VARCHAR(600) NULL,
+    url_hash CHAR(64) NOT NULL,
+    title VARCHAR(300) NULL,
+    description TEXT NULL,
+    brand VARCHAR(60) NULL,
+    model VARCHAR(120) NULL,
+    model_key VARCHAR(60) NULL,
+    model_year SMALLINT UNSIGNED NULL,
+    km INT UNSIGNED NULL,
+    fuel VARCHAR(20) NULL,
+    gearbox VARCHAR(20) NULL,
+    damage VARCHAR(40) NULL,
+    city VARCHAR(40) NULL,
+    price INT UNSIGNED NULL,
+    is_auction TINYINT(1) NOT NULL DEFAULT 0,
+    auction_ends_at DATETIME NULL,
+    tsb_value INT UNSIGNED NULL,
+    tsb_label VARCHAR(160) NULL,
+    market_value INT UNSIGNED NULL,
+    discount_pct DECIMAL(6,2) NULL,
+    score SMALLINT NULL,
+    urgent TINYINT(1) NOT NULL DEFAULT 0,
+    suspicious TINYINT(1) NOT NULL DEFAULT 0,
+    score_notes TEXT NULL,
+    needs_valuation TINYINT(1) NOT NULL DEFAULT 1,
+    valued_at DATETIME NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'new',
+    notes TEXT NULL,
+    search_text TEXT NULL,
+    first_seen_at DATETIME NOT NULL,
+    last_seen_at DATETIME NOT NULL,
+    price_changed_at DATETIME NULL,
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL,
+    UNIQUE KEY uq_radar_url (url_hash),
+    KEY idx_radar_score (score),
+    KEY idx_radar_brand (brand, model_key, model_year),
+    KEY idx_radar_status (status),
+    KEY idx_radar_valuation (needs_valuation)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS radar_price_history (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    listing_id INT UNSIGNED NOT NULL,
+    price INT UNSIGNED NOT NULL,
+    seen_at DATETIME NOT NULL,
+    KEY idx_price_history_listing (listing_id),
+    CONSTRAINT fk_price_history_listing FOREIGN KEY (listing_id) REFERENCES radar_listings (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS radar_runs (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    source VARCHAR(30) NOT NULL,
+    started_at DATETIME NOT NULL,
+    finished_at DATETIME NULL,
+    found INT UNSIGNED NOT NULL DEFAULT 0,
+    added INT UNSIGNED NOT NULL DEFAULT 0,
+    message TEXT NULL,
+    KEY idx_runs_started (started_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS radar_saved_searches (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(80) NOT NULL,
+    query_string VARCHAR(1000) NOT NULL,
+    created_at DATETIME NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

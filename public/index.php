@@ -15,8 +15,10 @@ require dirname(__DIR__) . '/src/bootstrap.php';
 use Ozoto\App;
 use Ozoto\Controller\AdminController;
 use Ozoto\Controller\ApplicationController;
+use Ozoto\Controller\CronController;
 use Ozoto\Controller\HomeController;
 use Ozoto\Controller\InstallController;
+use Ozoto\Controller\RadarController;
 use Ozoto\Router;
 
 App::boot();
@@ -45,6 +47,20 @@ $router->post('/yonetim/cikis', [AdminController::class, 'logout']);
 $router->get('/yonetim/basvuru/{id}', [AdminController::class, 'show']);
 $router->post('/yonetim/basvuru/{id}', [AdminController::class, 'update']);
 $router->get('/yonetim/foto/{id}', [AdminController::class, 'photo']);
+
+$router->get('/yonetim/radar', [RadarController::class, 'index']);
+$router->get('/yonetim/radar/ekle', [RadarController::class, 'create']);
+$router->post('/yonetim/radar/ekle', [RadarController::class, 'store']);
+$router->get('/yonetim/radar/ayarlar', [RadarController::class, 'settings']);
+$router->post('/yonetim/radar/ayarlar', [RadarController::class, 'saveSettings']);
+$router->post('/yonetim/radar/tara', [RadarController::class, 'runNow']);
+$router->post('/yonetim/radar/arama-kaydet', [RadarController::class, 'saveSearch']);
+$router->post('/yonetim/radar/arama-sil/{id}', [RadarController::class, 'deleteSearch']);
+$router->get('/yonetim/radar/{id}', [RadarController::class, 'show']);
+$router->post('/yonetim/radar/{id}', [RadarController::class, 'update']);
+$router->post('/yonetim/radar/{id}/sil', [RadarController::class, 'destroy']);
+$router->post('/yonetim/radar/{id}/degerle', [RadarController::class, 'revaluate']);
+$router->get('/cron/radar', [CronController::class, 'radar']);
 
 $router->get('/kurulum', [InstallController::class, 'form']);
 $router->post('/kurulum', [InstallController::class, 'install']);

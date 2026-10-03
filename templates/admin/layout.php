@@ -21,6 +21,12 @@ $user ??= null;
   <div class="container header-inner">
     <a class="logo" href="/yonetim"><?= logo_mark() ?><span>ozoto <small>yönetim</small></span></a>
     <?php if ($user): ?>
+      <?php $current = request_path(); ?>
+      <nav class="admin-nav" aria-label="Yönetim menüsü">
+        <a href="/yonetim"<?= $current === '/yonetim' || str_starts_with($current, '/yonetim/basvuru') ? ' aria-current="page"' : '' ?>>Başvurular</a>
+        <a href="/yonetim/radar"<?= str_starts_with($current, '/yonetim/radar') && $current !== '/yonetim/radar/ayarlar' ? ' aria-current="page"' : '' ?>>Kelepir Radar</a>
+        <a href="/yonetim/radar/ayarlar"<?= $current === '/yonetim/radar/ayarlar' ? ' aria-current="page"' : '' ?>>Ayarlar</a>
+      </nav>
       <div class="admin-user">
         <span class="admin-email"><?= e($user['email']) ?></span>
         <form method="post" action="/yonetim/cikis">

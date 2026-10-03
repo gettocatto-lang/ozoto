@@ -8,11 +8,34 @@ use PDO;
 
 final class Database
 {
+    /** Şemaya tablo eklendikçe artırılır; kurulu sitelerde eksik tablolar ilk bağlantıda oluşturulur. */
+    public const SCHEMA_VERSION = 2;
+
     private static ?PDO $pdo = null;
 
     public static function connection(): PDO
     {
-        return self::$pdo ??= self::connect((array) App::config('db'));
+        if (self::$pdo === null) {
+            $config = (array) App::config('db');
+            self::$pdo = self::connect($config);
+            self::upgrade(self::$pdo, ($config['driver'] ?? 'mysql') === 'sqlite' ? 'sqlite' : 'mysql');
+        }
+        return self::$pdo;
+    }
+
+    private static function upgrade(PDO $pdo, string $driver): void
+    {
+        $flag = BASE_PATH . '/storage/schema-version';
+        if (is_file($flag) && (int) file_get_contents($flag) >= self::SCHEMA_VERSION) {
+            return;
+        }
+        self::migrate($pdo, $driver);
+        self::markMigrated();
+    }
+
+    public static function markMigrated(): void
+    {
+        @file_put_contents(BASE_PATH . '/storage/schema-version', (string) self::SCHEMA_VERSION);
     }
 
     /** @param array<string, mixed> $c */

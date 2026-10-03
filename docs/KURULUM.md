@@ -45,6 +45,22 @@ iç notlar, tek tıkla arama ve WhatsApp.
 - **Sitemaps** bölümüne `https://ozoto.online/sitemap.xml` adresini gönder.
 - Google İşletme Profili açılırsa yerel aramalarda da görünürüz.
 
+## 8. Kelepir Radar
+Panelde **Kelepir Radar** sekmesi: ilanlar TSB kasko değeri + km/hasar düzeltmesi + benzer ilanlarla değerlenir, 0–100 kelepir puanı alır.
+Liste puana, fiyata, piyasa farkına, km'ye, yıla, tarihe göre sıralanır; marka, model, şehir, kaynak, yıl/fiyat/km aralığı,
+hasar, vites, yakıt, "acil", "ihale" filtreleri ve kayıtlı aramalar vardır.
+
+- **Elle ekleme:** Radar → **+ İlan ekle** → ilan linkini yapıştır, fiyat ve km'yi gir. Marka/model/yıl linkten bulunur.
+- **Otomatik tarama (arama motoru):**
+  1. [api-dashboard.search.brave.com](https://api-dashboard.search.brave.com/) adresinde hesap aç, **Search** planını seç
+     (ayda yaklaşık 1.000 sorgu ücretsiz kredi, sonrası 1.000 sorgu başına 5 $), API anahtarını kopyala.
+  2. Panel → **Ayarlar** → anahtarı yapıştır, "Otomatik taramayı aç"ı işaretle, kaydet.
+  3. Ayarlar sayfasındaki **zamanlanmış görev adresini** kopyala. Plesk → ozoto.online → **Scheduled Tasks → Add Task →
+     Fetch a URL** → adresi yapıştır → sıklık **her 30 dakika** → kaydet.
+  4. (Alternatif) "Run a PHP script" seçip `site\bin\radar.php` yolunu da verebilirsin.
+- Tarama ilan sitelerine istek atmaz; arama motorunun dizinindeki ilan linklerini, başlıklarını ve özetlerini alır.
+  Satıcı adı/telefonu alınmaz. Fiyatı özette olmayan kayıtlar "fiyat bilinmiyor" olarak gelir; ilana bakıp detay sayfasından tamamla.
+
 ## Sorun giderme
 | Belirti | Sebep / çözüm |
 |---|---|
@@ -52,4 +68,5 @@ iç notlar, tek tıkla arama ve WhatsApp.
 | Ana sayfa açılıyor, diğer sayfalar **404** | IIS **URL Rewrite** modülü kurulu değil. Plesk → Tools & Settings → Updates → IIS URL Rewrite bileşenini kur. |
 | Fotoğraflı başvuru gönderilemiyor | Plesk → PHP Settings: `upload_max_filesize` ≥ 12M, `post_max_size` ≥ 64M. |
 | Başvuru e-postası gelmiyor | Plesk'te posta servisi kapalı olabilir; başvurular yine de panelde görünür. |
+| Radar'da TSB değeri gelmiyor | TSB 15 yaşa kadar araçları kapsar; model adı eşleşmezse detay sayfasından model/paket bilgisini düzelt ve "Yeniden değerle"ye bas. |
 | Bir hata sayfası çıkıyor | `site\storage\logs\php-error.log` dosyasındaki son satırları Claude'a gönder. |

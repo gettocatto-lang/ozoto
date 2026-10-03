@@ -135,7 +135,7 @@ yeni başvuruda e-posta / WhatsApp bildirimi, sistemin o araç için **otomatik 
 |-----|--------|
 | 0 | Repo + `main` dalı, Plesk Git deploy ✅ · `public/` document root, SSL → [KURULUM.md](KURULUM.md) |
 | 1 | Ana sayfa + **başvuru formu** + yönetim paneli + kurulum sihirbazı ✅ kodlandı (04.10.2026) |
-| 2 | Veri toplama altyapısı (adaptörler, cron, kuyruk) + ilk yasal kaynaklar |
+| 2 | Kelepir Radar R1 ✅ (04.10.2026): TSB değerleme, puan motoru, panelde liste/filtre/sıralama, elle ekleme, arama motoru taraması, zamanlanmış görev. Sonraki: kamu ihaleleri (R2) — bkz. [ARASTIRMA-KELEPIR-RADAR.md](ARASTIRMA-KELEPIR-RADAR.md) |
 | 3 | Kelepir puanı motoru + fiyat geçmişi + dolandırıcılık uyarısı |
 | 4 | SEO sayfaları (şehir/marka/model), sitemap, yapılandırılmış veri |
 | 5 | Kullanıcı kayıtları + kişisel alarm/bildirim |

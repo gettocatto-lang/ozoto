@@ -98,6 +98,7 @@ final class InstallController
         try {
             $pdo = Database::connect($db);
             Database::migrate($pdo, $driver);
+            Database::markMigrated();
             $exists = $pdo->prepare('SELECT id FROM users WHERE email = ?');
             $exists->execute([$email]);
             $hash = password_hash($password, PASSWORD_DEFAULT);
