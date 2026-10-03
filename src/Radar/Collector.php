@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Ozoto\Radar;
 
 use Ozoto\Database;
+use Ozoto\Radar\Sources\EmailNotifications;
 use Ozoto\Radar\Sources\SearchEngine;
 use Ozoto\Settings;
 
@@ -15,12 +16,29 @@ use Ozoto\Settings;
 final class Collector
 {
     /** @return array{found: int, added: int, valued: int, messages: list<string>} */
-    public static function run(int $seconds): array
+    public static function run(int $seconds, bool $force = false): array
     {
         $deadline = microtime(true) + $seconds;
         $summary = ['found' => 0, 'added' => 0, 'valued' => 0, 'messages' => []];
 
-        if (Settings::get('search_enabled') === '1') {
+        if (Settings::get('mail_enabled') === '1') {
+            $runId = self::startRun(EmailNotifications::NAME);
+            $result = EmailNotifications::run($deadline - 10);
+            $summary['found'] += $result['found'];
+            $summary['added'] += $result['added'];
+            $message = sprintf('%d e-posta, %d ilan, %d yeni', $result['emails'], $result['found'], $result['added']);
+            if ($result['errors'] !== []) {
+                $message .= ' · Hatalar: ' . implode(' | ', array_slice($result['errors'], 0, 3));
+            }
+            $summary['messages'][] = 'E-posta: ' . $message;
+            self::finishRun($runId, $result['found'], $result['added'], $message);
+        }
+
+        // Arama motoru ücretli kredi harcadığı için ayarlanan aralıktan sık çalışmaz.
+        $interval = max(15, (int) (Settings::get('search_interval') ?: 180)) * 60;
+        $searchDue = time() - (int) strtotime((string) (Settings::get('search_last_run') ?? '2000-01-01')) >= $interval;
+        if (Settings::get('search_enabled') === '1' && ($searchDue || $force)) {
+            Settings::set('search_last_run', now());
             $runId = self::startRun(SearchEngine::NAME);
             $result = SearchEngine::run($deadline - 5);
             $summary['found'] += $result['found'];

@@ -21,6 +21,17 @@ final class Settings
         return self::$cache[$name] ?? $default;
     }
 
+    /** Şifreli saklanan ayar (API anahtarı, posta şifresi). */
+    public static function secret(string $name): string
+    {
+        return Support\Secret::decrypt(self::get($name));
+    }
+
+    public static function setSecret(string $name, string $value): void
+    {
+        self::set($name, $value === '' ? '' : Support\Secret::encrypt($value));
+    }
+
     public static function set(string $name, ?string $value): void
     {
         $pdo = Database::connection();

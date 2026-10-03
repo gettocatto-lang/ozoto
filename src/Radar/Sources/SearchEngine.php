@@ -37,7 +37,7 @@ final class SearchEngine
 
     public static function configured(): bool
     {
-        return (string) Settings::get('search_api_key', '') !== '';
+        return Settings::secret('search_api_key') !== '';
     }
 
     /**
@@ -56,7 +56,7 @@ final class SearchEngine
 
         $cursor = (int) (Settings::get('search_cursor') ?? 0);
         $endpoint = Settings::get('search_endpoint') ?: self::ENDPOINT;
-        $headers = ['X-Subscription-Token' => (string) Settings::get('search_api_key')];
+        $headers = ['X-Subscription-Token' => Settings::secret('search_api_key')];
 
         for ($i = 0; $i < min($maxQueries, count($queries)); $i++) {
             if (microtime(true) > $deadline) {
@@ -100,32 +100,10 @@ final class SearchEngine
      */
     public static function toListing(array $item): array
     {
-        $url = (string) $item['url'];
-        $title = trim(strip_tags((string) ($item['title'] ?? '')));
         $snippets = [(string) ($item['description'] ?? '')];
         foreach ((array) ($item['extra_snippets'] ?? []) as $extra) {
             $snippets[] = (string) $extra;
         }
-        $description = trim(html_entity_decode(strip_tags(implode(' ', $snippets)), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
-
-        $info = ListingParser::parseUrl($url);
-        $fromText = ListingParser::parseText($title . ' ' . $description);
-        $fromSlug = ListingParser::parseText($info['slug_text']);
-        $pick = static fn (string $key) => $fromText[$key] ?? $fromSlug[$key] ?? null;
-
-        return [
-            'url' => $url,
-            'title' => mb_substr($title !== '' ? $title : $info['slug_text'], 0, 300),
-            'description' => mb_substr($description, 0, 2000),
-            'brand' => $pick('brand'),
-            'model' => $fromText['brand'] !== null ? $fromText['model'] : ($fromSlug['model'] ?? $fromText['model']),
-            'model_year' => $pick('model_year'),
-            'km' => $pick('km'),
-            'price' => $fromText['price'],
-            'city' => $pick('city'),
-            'fuel' => $pick('fuel'),
-            'gearbox' => $pick('gearbox'),
-            'damage' => $pick('damage'),
-        ];
+        return ListingParser::toListing((string) $item['url'], (string) ($item['title'] ?? ''), implode(' ', $snippets));
     }
 }

@@ -50,13 +50,22 @@ Panelde **Kelepir Radar** sekmesi: ilanlar TSB kasko değeri + km/hasar düzeltm
 Liste puana, fiyata, piyasa farkına, km'ye, yıla, tarihe göre sıralanır; marka, model, şehir, kaynak, yıl/fiyat/km aralığı,
 hasar, vites, yakıt, "acil", "ihale" filtreleri ve kayıtlı aramalar vardır.
 
+- **E-posta bildirimleri (ana kaynak):**
+  1. Plesk → **Mail → Create Email Address**: `radar@ozoto.online`.
+  2. sahibinden / arabam / letgo hesaplarında bildirim adresi olarak bunu kullan (veya bildirimleri bu adrese otomatik yönlendir).
+  3. Sitelerde aramaları kaydet ve **"Bildirim almak istiyorum"**u anında/sık aç. Ne kadar çok kayıtlı arama, o kadar çok ilan.
+  4. Panel → **Ayarlar → 1. E-posta bildirimleri**: sunucu `localhost`, port `143`, güvenlik "Yok", kullanıcı ve şifre →
+     **Bağlantıyı test et** → "Otomatik okumayı aç" → Kaydet.
+  5. Bir bildirim e-postasını `.eml` olarak indirip "Bir bildirim e-postasını dene" bölümünden yükleyerek hangi ilanların
+     çıkarıldığını görebilirsin. Çıkmayan biçim olursa dosyayı Claude'a gönder.
 - **Elle ekleme:** Radar → **+ İlan ekle** → ilan linkini yapıştır, fiyat ve km'yi gir. Marka/model/yıl linkten bulunur.
 - **Otomatik tarama (arama motoru):**
   1. [api-dashboard.search.brave.com](https://api-dashboard.search.brave.com/) adresinde hesap aç, **Search** planını seç
      (ayda yaklaşık 1.000 sorgu ücretsiz kredi, sonrası 1.000 sorgu başına 5 $), API anahtarını kopyala.
   2. Panel → **Ayarlar** → anahtarı yapıştır, "Otomatik taramayı aç"ı işaretle, kaydet.
   3. Ayarlar sayfasındaki **zamanlanmış görev adresini** kopyala. Plesk → ozoto.online → **Scheduled Tasks → Add Task →
-     Fetch a URL** → adresi yapıştır → sıklık **her 30 dakika** → kaydet.
+     Fetch a URL** → adresi yapıştır → sıklık **her 5 dakika** (`*/5 * * * *`) → kaydet. E-postalar her çalışmada,
+     arama motoru ayarlardaki aralıkta (varsayılan 180 dk) çalışır.
   4. (Alternatif) "Run a PHP script" seçip `site\bin\radar.php` yolunu da verebilirsin.
 - Tarama ilan sitelerine istek atmaz; arama motorunun dizinindeki ilan linklerini, başlıklarını ve özetlerini alır.
   Satıcı adı/telefonu alınmaz. Fiyatı özette olmayan kayıtlar "fiyat bilinmiyor" olarak gelir; ilana bakıp detay sayfasından tamamla.

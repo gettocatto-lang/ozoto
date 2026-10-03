@@ -35,6 +35,7 @@ final class Listings
     public const SOURCES = [
         'manuel' => 'Elle eklenen',
         'arama' => 'Arama motoru',
+        'eposta' => 'E-posta bildirimi',
     ];
 
     private const FIELDS = [
@@ -178,7 +179,7 @@ final class Listings
         $stmt->execute();
         $done = 0;
         foreach ($stmt->fetchAll(\PDO::FETCH_COLUMN) as $id) {
-            if (microtime(true) > $deadline) {
+            if (microtime(true) > $deadline || Tsb::throttled()) {
                 break;
             }
             self::valuate((int) $id);

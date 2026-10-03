@@ -73,13 +73,44 @@ final class Http
      * Windows'taki PHP'de çoğu zaman güvenilir sertifika listesi tanımlı değildir; o durumda projedeki
      * Mozilla listesi (config/cacert.pem) kullanılır. Sertifika doğrulaması hiçbir zaman kapatılmaz.
      */
-    private static function caFile(): ?string
+    public static function caFile(): ?string
     {
         if ((string) ini_get('curl.cainfo') !== '' || (string) ini_get('openssl.cafile') !== '') {
             return null;
         }
         $bundle = BASE_PATH . '/config/cacert.pem';
         return is_file($bundle) ? $bundle : null;
+    }
+
+    /**
+     * Yönlendirme linkinin hedefini bulur (takip etmeden, sadece Location başlığını okur).
+     * E-postalardaki tıklama takip linklerini çözmek için; hedef siteye istek atılmaz.
+     */
+    public static function location(string $url, int $timeout = 10): ?string
+    {
+        if (!function_exists('curl_init')) {
+            return null;
+        }
+        $ch = curl_init($url);
+        $options = [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => false,
+            CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
+            CURLOPT_CONNECTTIMEOUT => $timeout,
+            CURLOPT_TIMEOUT => $timeout,
+            CURLOPT_HTTPHEADER => ['User-Agent: ' . self::USER_AGENT],
+            CURLOPT_NOBODY => false,
+            CURLOPT_RANGE => '0-0',
+        ];
+        if (($caFile = self::caFile()) !== null) {
+            $options[CURLOPT_CAINFO] = $caFile;
+        }
+        curl_setopt_array($ch, $options);
+        if (curl_exec($ch) === false) {
+            return null;
+        }
+        $target = curl_getinfo($ch, CURLINFO_REDIRECT_URL);
+        return is_string($target) && $target !== '' ? $target : null;
     }
 
     /**

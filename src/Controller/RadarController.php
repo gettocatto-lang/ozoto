@@ -10,6 +10,7 @@ use Ozoto\Database;
 use Ozoto\Radar\Collector;
 use Ozoto\Radar\ListingParser;
 use Ozoto\Radar\Listings;
+use Ozoto\Radar\Sources\EmailNotifications;
 use Ozoto\Radar\Sources\SearchEngine;
 use Ozoto\Session;
 use Ozoto\Settings;
@@ -156,6 +157,19 @@ final class RadarController
             'enabled' => Settings::get('search_enabled') === '1',
             'queries' => implode("\n", SearchEngine::queries()),
             'freshness' => Settings::get('search_freshness') ?: 'pd',
+            'interval' => (int) (Settings::get('search_interval') ?: 180),
+            'mail' => [
+                'enabled' => Settings::get('mail_enabled') === '1',
+                'host' => Settings::get('mail_host') ?? 'localhost',
+                'port' => Settings::get('mail_port') ?? '143',
+                'security' => Settings::get('mail_security') ?? 'none',
+                'user' => Settings::get('mail_user') ?? 'radar@ozoto.online',
+                'pass_set' => Settings::secret('mail_pass') !== '',
+                'folder' => Settings::get('mail_folder') ?? 'INBOX',
+                'senders' => implode("\n", EmailNotifications::allowedSenders()),
+                'delete_days' => Settings::get('mail_delete_days') ?? '7',
+            ],
+            'preview' => Session::pull('preview'),
             'cronUrl' => site_url('/cron/radar?anahtar=' . Collector::cronKey()),
             'runs' => Collector::recentRuns(),
             'notice' => Session::pull('notice'),
@@ -170,14 +184,15 @@ final class RadarController
         }
         $key = trim((string) ($_POST['search_api_key'] ?? ''));
         if ($key !== '') {
-            Settings::set('search_api_key', $key);
+            Settings::setSecret('search_api_key', $key);
         }
         if (!empty($_POST['search_api_key_clear'])) {
-            Settings::set('search_api_key', '');
+            Settings::setSecret('search_api_key', '');
         }
         Settings::set('search_enabled', empty($_POST['search_enabled']) ? '0' : '1');
         $queries = trim(str_replace("\r\n", "\n", (string) ($_POST['search_queries'] ?? '')));
         Settings::set('search_queries', mb_substr($queries !== '' ? $queries : SearchEngine::DEFAULT_QUERIES, 0, 10000));
+        Settings::set('search_interval', (string) max(15, min(1440, (int) ($_POST['search_interval'] ?? 180))));
         $freshness = (string) ($_POST['search_freshness'] ?? 'pd');
         Settings::set('search_freshness', in_array($freshness, ['pd', 'pw', 'pm'], true) ? $freshness : 'pd');
         Session::flash('notice', 'Ayarlar kaydedildi.');
@@ -191,7 +206,7 @@ final class RadarController
             abort(419);
         }
         @set_time_limit(90);
-        $summary = Collector::run(40);
+        $summary = Collector::run(40, true);
         Session::flash('notice', 'Tarama bitti: ' . implode(' · ', $summary['messages']));
         redirect((string) ($_POST['back'] ?? '') === 'ayarlar' ? '/yonetim/radar/ayarlar' : '/yonetim/radar');
     }
@@ -220,6 +235,70 @@ final class RadarController
         }
         Database::connection()->prepare('DELETE FROM radar_saved_searches WHERE id = ?')->execute([(int) $id]);
         redirect('/yonetim/radar');
+    }
+
+    public function saveMailSettings(): void
+    {
+        Auth::require();
+        if (!Csrf::valid()) {
+            abort(419);
+        }
+        $str = static fn (string $k): string => trim((string) ($_POST[$k] ?? ''));
+        Settings::set('mail_enabled', empty($_POST['mail_enabled']) ? '0' : '1');
+        Settings::set('mail_host', mb_substr($str('mail_host') ?: 'localhost', 0, 200));
+        Settings::set('mail_port', (string) max(1, min(65535, (int) ($str('mail_port') ?: 143))));
+        Settings::set('mail_security', in_array($str('mail_security'), ['none', 'ssl', 'starttls'], true) ? $str('mail_security') : 'none');
+        Settings::set('mail_user', mb_substr($str('mail_user'), 0, 200));
+        if ((string) ($_POST['mail_pass'] ?? '') !== '') {
+            Settings::setSecret('mail_pass', (string) $_POST['mail_pass']);
+        }
+        Settings::set('mail_folder', mb_substr($str('mail_folder') ?: 'INBOX', 0, 100));
+        Settings::set('mail_senders', mb_substr($str('mail_senders') ?: EmailNotifications::DEFAULT_SENDERS, 0, 2000));
+        Settings::set('mail_delete_days', $str('mail_delete_days') === '' ? '7' : (string) max(0, min(365, (int) $str('mail_delete_days'))));
+        Session::flash('notice', 'Posta kutusu ayarları kaydedildi.');
+        redirect('/yonetim/radar/ayarlar#eposta');
+    }
+
+    public function testMail(): void
+    {
+        Auth::require();
+        if (!Csrf::valid()) {
+            abort(419);
+        }
+        @set_time_limit(60);
+        try {
+            $message = EmailNotifications::test();
+        } catch (\Throwable $e) {
+            $message = 'Bağlantı başarısız: ' . $e->getMessage();
+        }
+        Session::flash('notice', $message);
+        redirect('/yonetim/radar/ayarlar#eposta');
+    }
+
+    /** Bir bildirim e-postasını (.eml) yükleyip neler çıkarıldığını gösterir; istenirse Radar'a ekler. */
+    public function previewMail(): void
+    {
+        Auth::require();
+        if (!Csrf::valid()) {
+            abort(419);
+        }
+        $file = $_FILES['eml'] ?? null;
+        if (!is_array($file) || ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || !is_uploaded_file((string) $file['tmp_name'])) {
+            Session::flash('notice', 'E-posta dosyası yüklenemedi.');
+            redirect('/yonetim/radar/ayarlar#eposta');
+        }
+        $raw = (string) file_get_contents((string) $file['tmp_name'], false, null, 0, 5 * 1024 * 1024);
+        $save = !empty($_POST['save']);
+        $result = EmailNotifications::process($raw, null, $save);
+        Session::flash('preview', [
+            'from' => $result['from'],
+            'subject' => $result['subject'],
+            'allowed' => $result['allowed'],
+            'saved' => $save,
+            'added' => $result['added'],
+            'listings' => array_map(static fn (array $l): array => array_intersect_key($l, array_flip(['url', 'title', 'brand', 'model', 'model_year', 'km', 'price', 'city'])), array_slice($result['listings'], 0, 100)),
+        ]);
+        redirect('/yonetim/radar/ayarlar#onizleme');
     }
 
     /**

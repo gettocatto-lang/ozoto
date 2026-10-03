@@ -16,6 +16,17 @@ final class Tsb
 {
     private const BASE = 'https://www.tsb.org.tr';
     private const TTL = 10 * 86400;
+    /** TSB hızlı ardışık isteklere 429 veriyor: istekler arasında en az bu kadar beklenir. */
+    private const MIN_INTERVAL = 0.6;
+
+    private static float $lastRequest = 0.0;
+    private static bool $throttled = false;
+
+    /** Bu çalışmada TSB "çok fazla istek" dediyse true; değerleme bir sonraki tura bırakılır. */
+    public static function throttled(): bool
+    {
+        return self::$throttled;
+    }
 
     /** Katalogdaki marka → TSB'deki marka adında aranacak kelime(ler). TSB yerli üretimi ayrı listeler: "RENAULT (OYAK)", "TOFAS-FIAT". */
     private const BRAND_KEYS = [
@@ -152,8 +163,24 @@ final class Tsb
             return json_decode((string) $row['payload'], true);
         }
 
+        if (self::$throttled) {
+            throw new \RuntimeException('TSB istek sınırına ulaşıldı; sonraki turda devam edilecek.');
+        }
+        $wait = self::MIN_INTERVAL - (microtime(true) - self::$lastRequest);
+        if ($wait > 0) {
+            usleep((int) ($wait * 1_000_000));
+        }
+        self::$lastRequest = microtime(true);
+
         $url = self::BASE . $path . ($query === [] ? '' : '?' . http_build_query($query));
-        $payload = Http::json($url, ['Referer' => self::BASE . '/tr/kasko-deger-listesi'], 20);
+        try {
+            $payload = Http::json($url, ['Referer' => self::BASE . '/tr/kasko-deger-listesi'], 20);
+        } catch (\RuntimeException $e) {
+            if (str_starts_with($e->getMessage(), 'HTTP 429')) {
+                self::$throttled = true;
+            }
+            throw $e;
+        }
         if (is_array($payload) && array_key_exists('HasError', $payload)) {
             if ($payload['HasError']) {
                 throw new \RuntimeException('TSB hatası: ' . ($payload['Message'] ?? ''));

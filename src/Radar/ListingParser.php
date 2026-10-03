@@ -108,6 +108,40 @@ final class ListingParser
         };
     }
 
+    /**
+     * Link + başlık + çevre metinden Radar kaydı alanlarını üretir (arama sonucu, e-posta bildirimi, eklenti).
+     * Metinde olmayan bilgi linkteki kelimelerden tamamlanır.
+     *
+     * @return array<string, mixed>
+     */
+    public static function toListing(string $url, string $title, string $text): array
+    {
+        $clean = static fn (string $s): string => trim((string) preg_replace('/\s+/u', ' ', html_entity_decode(strip_tags($s), ENT_QUOTES | ENT_HTML5, 'UTF-8')));
+        $title = $clean($title);
+        $text = $clean($text);
+        $info = self::parseUrl($url);
+        $fromText = self::parseText($title . ' ' . $text);
+        $fromSlug = self::parseText($info['slug_text']);
+        $pick = static fn (string $key) => $fromText[$key] ?? $fromSlug[$key] ?? null;
+        // sahibinden/arabam/letgo linkleri düzenli: marka-model-yıl oradan daha güvenilir okunur.
+        $vehicle = $fromSlug['brand'] !== null ? $fromSlug : $fromText;
+
+        return [
+            'url' => $url,
+            'title' => mb_substr($title !== '' ? $title : $info['slug_text'], 0, 300),
+            'description' => mb_substr($text, 0, 2000) ?: null,
+            'brand' => $vehicle['brand'] ?? $fromSlug['brand'],
+            'model' => $vehicle['model'] ?? $fromText['model'],
+            'model_year' => $vehicle['model_year'] ?? $pick('model_year'),
+            'km' => $pick('km'),
+            'price' => $fromText['price'],
+            'city' => $pick('city'),
+            'fuel' => $pick('fuel'),
+            'gearbox' => $pick('gearbox'),
+            'damage' => $pick('damage'),
+        ];
+    }
+
     public static function urlHash(string $url): string
     {
         return hash('sha256', self::parseUrl($url)['normalized']);
@@ -154,6 +188,17 @@ final class ListingParser
 
         [$brand, $brandEnd] = self::findBrand($folded);
         [$model, $modelKey] = $brand !== null ? self::findModel(substr($folded, $brandEnd)) : [null, null];
+        // Model adı metinde birkaç kez geçebilir (resim etiketi + başlık): en ayrıntılı geçişi al.
+        if ($modelKey !== null) {
+            $offset = 0;
+            while (preg_match('/(?<![a-z0-9])' . preg_quote($modelKey, '/') . '(?![a-z0-9])/u', $folded, $m, PREG_OFFSET_CAPTURE, $offset) === 1) {
+                [$candidate] = self::findModel(substr($folded, $m[0][1]));
+                if ($candidate !== null && substr_count($candidate, ' ') > substr_count((string) $model, ' ')) {
+                    $model = $candidate;
+                }
+                $offset = $m[0][1] + strlen($m[0][0]);
+            }
+        }
 
         $city = null;
         foreach (Catalog::cities() as $candidate) {
@@ -247,6 +292,10 @@ final class ListingParser
             }
             $isYear = preg_match('/^(19[89]\d|20[0-4]\d)$/', $word) === 1;
             $isNumber = preg_match('/^\d{1,3}(\.\d{3})+$|^\d{4,}$/', $word) === 1;
+            // Metin tekrar ediyorsa (resim etiketi + başlık) ya da başka bir marka adı geldiyse model bitti.
+            if ($words !== [] && (in_array($word, $words, true) || isset(self::brandIndex()[$word]))) {
+                break;
+            }
             if ($isYear || $isNumber || in_array($word, self::STOP_WORDS, true) || self::isCity($word)) {
                 if ($words !== []) {
                     break;
