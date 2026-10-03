@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Öz Oto Radar — Seçenekler</title>
+<link rel="stylesheet" href="ui.css">
+</head>
+<body>
+<main class="wrap">
+  <h1>Öz Oto Radar</h1>
+  <p class="muted">Açtığınız ilan sayfalarındaki araçları Kelepir Radar'a gönderir ve her ilanın yanında puanı gösterir.
+    Kendi kendine sayfa gezmez; satıcı adı ve telefonu gönderilmez.</p>
+  <label>Sunucu adresi
+    <input id="server" type="url" placeholder="https://ozoto.online">
+  </label>
+  <label>Eklenti anahtarı
+    <input id="token" type="password" placeholder="Panel → Radar → Ayarlar → Tarayıcı eklentisi">
+  </label>
+  <label class="check"><input id="enabled" type="checkbox"> Eklenti açık</label>
+  <div class="row">
+    <button id="save" type="button">Kaydet</button>
+    <button id="test" type="button" class="ghost">Bağlantıyı test et</button>
+  </div>
+  <p id="status" role="status"></p>
+</main>
+<script src="options.js"></script>
+</body>
+</html>

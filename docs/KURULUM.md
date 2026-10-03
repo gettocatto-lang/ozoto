@@ -58,6 +58,13 @@ hasar, vites, yakıt, "acil", "ihale" filtreleri ve kayıtlı aramalar vardır.
      **Bağlantıyı test et** → "Otomatik okumayı aç" → Kaydet.
   5. Bir bildirim e-postasını `.eml` olarak indirip "Bir bildirim e-postasını dene" bölümünden yükleyerek hangi ilanların
      çıkarıldığını görebilirsin. Çıkmayan biçim olursa dosyayı Claude'a gönder.
+- **Tarayıcı eklentisi (Chrome):** ekip ilanları gezerken sayfadaki ilanları Radar'a gönderir, her ilanın yanında puan rozeti gösterir.
+  1. Panel → **Ayarlar → 2. Tarayıcı eklentisi** → **Anahtar oluştur** → anahtarı kopyala (bir kez gösterilir).
+  2. **Eklentiyi indir (zip)** → bir klasöre çıkar.
+  3. Chrome → `chrome://extensions` → **Geliştirici modu** → **Paketlenmemiş öğe yükle** → klasörü seç.
+  4. Eklenti **Seçenekler**: sunucu `https://ozoto.online`, anahtar → **Bağlantıyı test et**.
+  5. sahibinden/arabam/letgo/Facebook Marketplace'te "en yeni" sıralı liste sayfalarını gez; rozetler çıkar, ilanlar Radar'a düşer.
+  Eklenti kendi kendine sayfa gezmez; satıcı adı ve telefonu gönderilmez.
 - **Elle ekleme:** Radar → **+ İlan ekle** → ilan linkini yapıştır, fiyat ve km'yi gir. Marka/model/yıl linkten bulunur.
 - **Otomatik tarama (arama motoru):**
   1. [api-dashboard.search.brave.com](https://api-dashboard.search.brave.com/) adresinde hesap aç, **Search** planını seç

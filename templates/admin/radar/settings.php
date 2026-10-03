@@ -11,7 +11,7 @@
  * @var list<array<string, mixed>> $runs
  * @var string|null $notice
  */
-$sourceNames = ['eposta' => 'E-posta', 'arama' => 'Arama motoru'];
+$sourceNames = ['eposta' => 'E-posta', 'arama' => 'Arama motoru', 'eklenti' => 'Eklenti'];
 ?>
 <div class="container narrow-admin">
   <h1>Radar ayarları</h1>
@@ -99,9 +99,33 @@ $sourceNames = ['eposta' => 'E-posta', 'arama' => 'Arama motoru'];
     <?php endif ?>
   </form>
 
+  <section class="form-card" id="eklenti">
+    <h2 class="form-card-title">2. Tarayıcı eklentisi <small>(Chrome)</small></h2>
+    <div class="howto">
+      <p><strong>Nasıl çalışır:</strong> Siz veya ekibiniz sahibinden, arabam, letgo ya da Facebook Marketplace'te bir liste veya ilan sayfası açtığında
+        eklenti sayfadaki ilanları Radar'a gönderir ve her ilanın yanında kelepir puanı rozeti gösterir. Kendi kendine sayfa gezmez, kaydırmaz;
+        satıcı adı ve telefonu gönderilmez. İpucu: "en yeni ilanlar" sıralı liste sayfalarını gezmek en çok ilanı getirir.</p>
+      <ol>
+        <li>Aşağıdan bir <strong>eklenti anahtarı</strong> oluşturun ve kopyalayın (yalnızca bir kez gösterilir).</li>
+        <li><?php if ($extension['zip']): ?><a href="/yonetim/radar/eklenti.zip">Eklentiyi indirin (zip)</a><?php else: ?>Eklentiyi GitHub deposundaki <code>extension</code> klasöründen indirin<?php endif ?> ve bir klasöre çıkarın.</li>
+        <li>Chrome'da <code>chrome://extensions</code> → sağ üstte <strong>Geliştirici modu</strong>nu açın → <strong>Paketlenmemiş öğe yükle</strong> → çıkardığınız klasörü seçin.</li>
+        <li>Eklentinin <strong>Seçenekler</strong> sayfasında sunucu <code><?= e(rtrim(site_url('/'), '/')) ?></code> ve anahtarı girin, <strong>Bağlantıyı test et</strong>'e basın.</li>
+      </ol>
+    </div>
+    <?php if ($extension['token']): ?>
+      <div class="alert alert-success">Yeni anahtar (şimdi kopyalayın, bir daha gösterilmeyecek):</div>
+      <input class="code-input" type="text" readonly value="<?= e($extension['token']) ?>" aria-label="Eklenti anahtarı">
+    <?php endif ?>
+    <p class="muted small"><?= $extension['configured'] ? 'Bir eklenti anahtarı tanımlı. Yeni anahtar oluşturursanız eskisiyle bağlı eklentiler çalışmayı bırakır.' : 'Henüz eklenti anahtarı yok.' ?></p>
+    <form method="post" action="/yonetim/radar/eklenti-anahtar">
+      <?= csrf_field() ?>
+      <button class="btn btn-<?= $extension['configured'] ? 'ghost' : 'primary' ?>" type="submit"><?= $extension['configured'] ? 'Yeni anahtar oluştur' : 'Anahtar oluştur' ?></button>
+    </form>
+  </section>
+
   <form class="form-card" method="post" action="/yonetim/radar/ayarlar">
     <?= csrf_field() ?>
-    <h2 class="form-card-title">2. Arama motoru taraması <small>(yan kaynak)</small></h2>
+    <h2 class="form-card-title">3. Arama motoru taraması <small>(yan kaynak)</small></h2>
     <p class="muted small">
       Brave Search'ün resmî API'si ile arama motorunun dizinindeki ilan linkleri alınır. Dizine giren ilanlar sınırlı ve gecikmelidir;
       e-posta bildirimlerinin yerini tutmaz. Anahtar: <a href="https://api-dashboard.search.brave.com/" target="_blank" rel="noopener noreferrer">api-dashboard.search.brave.com</a>

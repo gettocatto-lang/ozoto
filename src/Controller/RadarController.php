@@ -170,6 +170,11 @@ final class RadarController
                 'delete_days' => Settings::get('mail_delete_days') ?? '7',
             ],
             'preview' => Session::pull('preview'),
+            'extension' => [
+                'configured' => (string) Settings::get('extension_token_hash', '') !== '',
+                'token' => Session::pull('extension_token'),
+                'zip' => class_exists(\ZipArchive::class),
+            ],
             'cronUrl' => site_url('/cron/radar?anahtar=' . Collector::cronKey()),
             'runs' => Collector::recentRuns(),
             'notice' => Session::pull('notice'),
@@ -273,6 +278,44 @@ final class RadarController
         }
         Session::flash('notice', $message);
         redirect('/yonetim/radar/ayarlar#eposta');
+    }
+
+    /** Eklenti için yeni anahtar üretir; anahtar yalnızca bir kez gösterilir, veritabanında özeti tutulur. */
+    public function extensionToken(): void
+    {
+        Auth::require();
+        if (!Csrf::valid()) {
+            abort(419);
+        }
+        $token = 'oz_' . bin2hex(random_bytes(20));
+        Settings::set('extension_token_hash', hash('sha256', $token));
+        Session::flash('extension_token', $token);
+        redirect('/yonetim/radar/ayarlar#eklenti');
+    }
+
+    /** Eklenti klasörünü zip olarak indirir (Chrome → "Paketlenmemiş öğe yükle" için). */
+    public function extensionDownload(): void
+    {
+        Auth::require();
+        $dir = BASE_PATH . '/extension';
+        if (!class_exists(\ZipArchive::class) || !is_dir($dir)) {
+            Session::flash('notice', 'Sunucuda zip desteği yok. Eklenti klasörünü GitHub deposundaki "extension" klasöründen indirin.');
+            redirect('/yonetim/radar/ayarlar#eklenti');
+        }
+        $tmp = tempnam(sys_get_temp_dir(), 'ozr');
+        $zip = new \ZipArchive();
+        $zip->open($tmp, \ZipArchive::OVERWRITE);
+        $files = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($dir, \FilesystemIterator::SKIP_DOTS));
+        foreach ($files as $file) {
+            $relative = 'oz-oto-radar/' . str_replace('\\', '/', substr($file->getPathname(), strlen($dir) + 1));
+            $zip->addFile($file->getPathname(), $relative);
+        }
+        $zip->close();
+        header('Content-Type: application/zip');
+        header('Content-Disposition: attachment; filename="oz-oto-radar.zip"');
+        header('Content-Length: ' . (string) filesize($tmp));
+        readfile($tmp);
+        @unlink($tmp);
     }
 
     /** Bir bildirim e-postasını (.eml) yükleyip neler çıkarıldığını gösterir; istenirse Radar'a ekler. */

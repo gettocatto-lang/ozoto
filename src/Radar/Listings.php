@@ -36,6 +36,7 @@ final class Listings
         'manuel' => 'Elle eklenen',
         'arama' => 'Arama motoru',
         'eposta' => 'E-posta bildirimi',
+        'eklenti' => 'Tarayıcı eklentisi',
     ];
 
     private const FIELDS = [

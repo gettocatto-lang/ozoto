@@ -16,6 +16,7 @@ config/      app.php (varsayılanlar) + local.php (kurulumda oluşur, Git'e girm
 database/    MySQL ve SQLite şemaları
 storage/     Yüklenen fotoğraflar, oturumlar, loglar (web'den erişilemez)
 bin/         Komut satırı görevleri (radar.php: Radar toplayıcısı)
+extension/   Chrome eklentisi (Öz Oto Radar): açık ilan sayfalarını Radar'a gönderir, puan rozeti gösterir
 ```
 
 ## Sayfalar
@@ -29,6 +30,7 @@ bin/         Komut satırı görevleri (radar.php: Radar toplayıcısı)
 | `/yonetim/radar` | Kelepir Radar: değerlenmiş ilan listesi, filtre, sıralama, kayıtlı aramalar |
 | `/yonetim/radar/ayarlar` | Arama motoru taraması ve zamanlanmış görev adresi |
 | `/cron/radar?anahtar=…` | Zamanlanmış görev (Plesk "URL getir") |
+| `/api/radar/eklenti` | Tarayıcı eklentisi API'si (eklenti anahtarıyla) |
 | `/kurulum` | Tek seferlik kurulum sihirbazı |
 | `/sitemap.xml` | Site haritası |
 

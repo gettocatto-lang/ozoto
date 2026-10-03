@@ -116,7 +116,7 @@ final class ListingParser
      */
     public static function toListing(string $url, string $title, string $text): array
     {
-        $clean = static fn (string $s): string => trim((string) preg_replace('/\s+/u', ' ', html_entity_decode(strip_tags($s), ENT_QUOTES | ENT_HTML5, 'UTF-8')));
+        $clean = static fn (string $s): string => self::scrubPhones(trim((string) preg_replace('/\s+/u', ' ', html_entity_decode(strip_tags($s), ENT_QUOTES | ENT_HTML5, 'UTF-8'))));
         $title = $clean($title);
         $text = $clean($text);
         $info = self::parseUrl($url);
@@ -140,6 +140,12 @@ final class ListingParser
             'gearbox' => $pick('gearbox'),
             'damage' => $pick('damage'),
         ];
+    }
+
+    /** Metindeki telefon numaralarını siler (kişisel veri saklanmaz). */
+    public static function scrubPhones(string $text): string
+    {
+        return (string) preg_replace('/(?<![\d.,])(?:\+?90[\s.\-]?)?\(?0?[2-5]\d{2}\)?[\s.\-]?\d{3}[\s.\-]?\d{2}[\s.\-]?\d{2}(?![\d.,])/u', '[tel]', $text);
     }
 
     public static function urlHash(string $url): string
