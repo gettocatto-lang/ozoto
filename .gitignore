@@ -1,0 +1,16 @@
+# Sunucuya özel ayarlar (/kurulum oluşturur)
+/config/local.php
+
+# Çalışma zamanı verileri
+/storage/uploads/*
+/storage/logs/*
+/storage/sessions/*
+/storage/*.sqlite
+/storage/schema-version
+!/storage/**/.gitkeep
+
+.DS_Store
+Thumbs.db
+
+# Node
+/node_modules/

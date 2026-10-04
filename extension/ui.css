@@ -1,0 +1,16 @@
+:root { color-scheme: light; }
+body { margin: 0; font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; color: #0b0f12; background: #eef1f2; }
+.popup { width: 300px; }
+.wrap { max-width: 520px; margin: 0 auto; padding: 20px; display: grid; gap: 12px; }
+h1 { font-size: 18px; margin: 0; }
+label { display: grid; gap: 4px; font-weight: 600; }
+label.check { display: flex; align-items: center; gap: 8px; }
+input[type=url], input[type=password] { font: inherit; padding: 9px 10px; border: 1px solid #c9d1d6; border-radius: 2px; background: #fff; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+button { font: inherit; font-weight: 600; padding: 9px 14px; border-radius: 2px; border: 1px solid #0b0f12; background: #0b0f12; color: #fff; cursor: pointer; }
+button.ghost { background: transparent; color: #0b0f12; }
+a { color: #1d5c43; font-weight: 600; }
+p { margin: 0; }
+.muted { color: #56626b; }
+.ok { color: #15803d; font-weight: 600; }
+.err { color: #b91c1c; font-weight: 600; }

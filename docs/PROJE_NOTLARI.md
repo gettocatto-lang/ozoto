@@ -23,14 +23,32 @@
 - GitHub'a deploy key eklendi (adı: `ozoto`, **Read/write**). Plesk sadece çekme (pull) yapacağı için **read-only yeterli** — güvenlik için write yetkisi kaldırılabilir.
 - **Plesk hatası:** `gitmng failed: error: pathspec 'main' did not match any file(s) known to git`
   - **Sebep:** Repo tamamen boştu, `main` dalı (branch) yoktu. Plesk bulunmayan bir dalı çekmeye çalıştı.
-  - **Çözüm:** Repoya ilk commit atılıp `main` dalı oluşturulunca Plesk'te "Add Repository" tekrar denenecek.
-- **Document root** `public/` klasörü olacak (Plesk → Hosting Settings → Document root: `httpdocs/public`).
+  - **Çözüm:** `main` dalı oluşturuldu (03.10.2026).
+- **Plesk hatası 2:** `fatal: destination path 'C:\Inetpub\vhosts\ozoto.online\git\ozoto.git' already exists and is not an empty directory`
+  - **Sebep:** İlk başarısız deneme sunucuda yarım bir `ozoto.git` klasörü bıraktı; aynı isimle tekrar klonlanamıyor.
+  - **Çözüm:** Ya o klasör silinip tekrar denenecek, ya da formdaki *Repository name* farklı bir isim yapılacak (ör. `ozoto-web.git`).
+- **Plesk Git bağlantısı kuruldu (04.10.2026):** repo `ozoto.git`, dal `main`, otomatik deploy yolu `\site`
+  (`C:\Inetpub\vhosts\ozoto.online\site`).
+- **Document root** kod yazılınca `site\public` yapılacak (Plesk → Hosting & DNS → Hosting Settings → Document root).
   Böylece kaynak kod, ayarlar, `.env`, bu notlar gibi dosyalar web'den erişilemez.
+  `public/` klasörü repoya girmeden değiştirilmemeli, yoksa site hata verir.
+- **Otomatik deploy için GitHub webhook:** Plesk'te repo ayarlarındaki *Webhook URL* kopyalanıp
+  GitHub → Settings → Webhooks'a eklenecek (olay: *push*). Plesk'in SSL sertifikası geçerli değilse
+  GitHub'da *SSL verification* kapatılması gerekebilir. Webhook yoksa güncellemeler Plesk'te **Pull now** ile çekilir.
+- **Plesk deneme lisansı 3 gün sonra bitiyor** (04.10.2026 itibarıyla). Lisans alınmazsa panel kilitlenir;
+  Git deploy ve ayarlar kullanılamaz.
+
+### Sunucu Windows + IIS (önemli tespit)
+Hata mesajındaki `C:\Inetpub\vhosts\...` yolu sunucunun **Windows Plesk / IIS** olduğunu gösteriyor. Bunun projeye etkileri:
+- `.htaccess` **çalışmaz** → URL yönlendirme ve erişim engelleri **`web.config`** (IIS URL Rewrite) ile yapılacak.
+- Dosya yolları her yerde `DIRECTORY_SEPARATOR` / `__DIR__` ile kurulacak; Linux'a özel komut (`exec`, `chmod` vb.) kullanılmayacak.
+- Zamanlanmış görevler Plesk'te Windows görev zamanlayıcısı üzerinden `php.exe` ile çalışacak.
+- Yükleme klasörü (`storage/`) için IIS uygulama havuzu kullanıcısına yazma izni gerekecek.
 
 ### FastCGI'nin projeye etkisi
 - Web istekleri kısa sürmeli (FastCGI zaman aşımı). **Veri toplama (tarama) işleri web isteğinde çalışmayacak**;
-  Plesk **Zamanlanmış Görevler (cron)** ile PHP CLI üzerinden arka planda çalışacak.
-- Kalıcı süreç (daemon / websocket) yok; her şey cron + veritabanı kuyruğu ile çözülecek.
+  Plesk **Zamanlanmış Görevler** ile PHP CLI üzerinden arka planda çalışacak.
+- Kalıcı süreç (daemon / websocket) yok; her şey zamanlanmış görev + veritabanı kuyruğu ile çözülecek.
 
 ---
 
@@ -100,10 +118,14 @@ yeni başvuruda e-posta / WhatsApp bildirimi, sistemin o araç için **otomatik 
 
 ## 7. Teknik mimari (taslak)
 
-- **PHP 8.4**, Composer (PSR-4 autoload), framework'süz hafif yapı → Plesk'te sorunsuz deploy.
-- **MySQL / MariaDB** (Plesk'te mevcut), PDO + hazırlanmış sorgular.
+- **PHP 8.4**, framework'süz ve Composer'sız hafif yapı (kendi PSR-4 autoloader'ı) → Plesk'te ek adım gerektirmeden deploy.
+- **MySQL / MariaDB** (önerilen) veya **SQLite**, PDO + hazırlanmış sorgular. Seçim kurulum sihirbazında yapılır.
 - Klasörler: `public/` (web kökü), `src/` (kod), `templates/`, `bin/` (cron komutları), `storage/` (log, yüklemeler), `config/`.
 - Cron işleri: kaynak tarama → normalize → mükerrer birleştirme → kelepir puanı → bildirim.
+- Faz 1 güvenlik önlemleri: CSRF, gizli bot alanı + süre tuzağı, IP başına başvuru/giriş sınırı, fotoğraf içerik doğrulaması,
+  fotoğraflar web kökü dışında, CSP ve güvenlik başlıkları, ham IP yerine özet (KVKK).
+- Ana sayfa ve SSS metinleri pazarlama vaatleri içerir ("çoğu zaman aynı gün", "sürpriz kesinti yok" vb.);
+  firmanın gerçek işleyişine göre gözden geçirilmeli. KVKK metni taslaktır, hukukçu kontrolünden geçmeli.
 
 ---
 
@@ -111,9 +133,9 @@ yeni başvuruda e-posta / WhatsApp bildirimi, sistemin o araç için **otomatik 
 
 | Faz | İçerik |
 |-----|--------|
-| 0 | Repo + `main` dalı, Plesk Git deploy, `public/` document root, SSL |
-| 1 | Ana sayfa + **başvuru formu** + yönetim paneli (en hızlı gelir/değer, SEO'ya erken başlar) |
-| 2 | Veri toplama altyapısı (adaptörler, cron, kuyruk) + ilk yasal kaynaklar |
+| 0 | Repo + `main` dalı, Plesk Git deploy ✅ · `public/` document root, SSL → [KURULUM.md](KURULUM.md) |
+| 1 | Ana sayfa + **başvuru formu** + yönetim paneli + kurulum sihirbazı ✅ kodlandı (04.10.2026) |
+| 2 | Kelepir Radar R1 ✅ (04.10.2026): TSB değerleme, puan motoru, panelde liste/filtre/sıralama, elle ekleme, arama motoru taraması, zamanlanmış görev. Sonraki: kamu ihaleleri (R2) — bkz. [ARASTIRMA-KELEPIR-RADAR.md](ARASTIRMA-KELEPIR-RADAR.md) |
 | 3 | Kelepir puanı motoru + fiyat geçmişi + dolandırıcılık uyarısı |
 | 4 | SEO sayfaları (şehir/marka/model), sitemap, yapılandırılmış veri |
 | 5 | Kullanıcı kayıtları + kişisel alarm/bildirim |
