@@ -154,6 +154,29 @@ $sourceNames = ['eposta' => 'E-posta', 'arama' => 'Arama motoru', 'eklenti' => '
     <button class="btn btn-primary" type="submit">Kaydet</button>
   </form>
 
+  <section class="form-card" id="kaynaklar">
+    <h2 class="form-card-title">4. Kamu ihaleleri <small>(hazırlanıyor)</small></h2>
+    <p class="muted small">İcra (ilan.gov.tr), gümrük ve kamu araçları (e-ihale), UYAP e-Satış. Bu siteler yurt dışından gelen bağlantıları kısıtladığı için
+      toplayıcılar sitenin İstanbul'daki sunucusunda çalışacak. Aşağıdaki test, bu sunucudan hangi kaynaklara erişilebildiğini kaydeder;
+      sonucu Claude'a gönderin, toplayıcılar buna göre eklenecek.</p>
+    <form method="post" action="/yonetim/radar/kaynak-testi">
+      <?= csrf_field() ?>
+      <button class="btn btn-ghost" type="submit">Kamu kaynaklarını test et</button>
+    </form>
+    <?php if ($diagnostics): ?>
+      <p class="muted small">Son test: <?= e(format_date((string) $diagnostics['at'])) ?></p>
+      <ul class="history">
+        <?php foreach ($diagnostics['results'] as $r): ?>
+          <li><span><?= e($r['name']) ?></span><span class="<?= $r['status'] >= 200 && $r['status'] < 300 ? 'good' : 'bad' ?>"><?= e($r['note']) ?> · <?= (int) $r['ms'] ?> ms</span></li>
+        <?php endforeach ?>
+      </ul>
+      <details>
+        <summary class="small">Ayrıntılı yanıt (Claude'a göndermek için kopyalayın)</summary>
+        <textarea class="code-input" rows="10" readonly><?= e(json_encode($diagnostics, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)) ?></textarea>
+      </details>
+    <?php endif ?>
+  </section>
+
   <section class="form-card">
     <h2 class="form-card-title">Zamanlanmış görev (Plesk)</h2>
     <p class="muted small">Plesk → ozoto.online → <strong>Scheduled Tasks → Add Task → "Fetch a URL"</strong>, aşağıdaki adresi yapıştırın,

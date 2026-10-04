@@ -434,3 +434,5 @@ fieldset.field > legend + * { clear: both; }
 .howto p { margin: 0; }
 .preview { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line); display: grid; gap: 10px; }
 code { font: .88em ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: var(--bg-alt); padding: 1px 5px; border-radius: 4px; }
+.history .good { color: var(--ok); font-weight: 600; }
+.history .bad { color: var(--danger); font-weight: 600; }

@@ -8,6 +8,7 @@ use Ozoto\Auth;
 use Ozoto\Csrf;
 use Ozoto\Database;
 use Ozoto\Radar\Collector;
+use Ozoto\Radar\Diagnostics;
 use Ozoto\Radar\ListingParser;
 use Ozoto\Radar\Listings;
 use Ozoto\Radar\Sources\EmailNotifications;
@@ -170,6 +171,7 @@ final class RadarController
                 'delete_days' => Settings::get('mail_delete_days') ?? '7',
             ],
             'preview' => Session::pull('preview'),
+            'diagnostics' => Diagnostics::last(),
             'extension' => [
                 'configured' => (string) Settings::get('extension_token_hash', '') !== '',
                 'token' => Session::pull('extension_token'),
@@ -278,6 +280,19 @@ final class RadarController
         }
         Session::flash('notice', $message);
         redirect('/yonetim/radar/ayarlar#eposta');
+    }
+
+    /** Kamu ihale kaynaklarına bu sunucudan erişilebiliyor mu? (Toplayıcılar buna göre yazılacak.) */
+    public function diagnose(): void
+    {
+        Auth::require();
+        if (!Csrf::valid()) {
+            abort(419);
+        }
+        @set_time_limit(150);
+        $ok = count(array_filter(Diagnostics::run(), static fn (array $r): bool => $r['status'] >= 200 && $r['status'] < 300));
+        Session::flash('notice', 'Kaynak testi bitti: ' . $ok . ' kaynak erişilebilir. Sonuçlar aşağıda.');
+        redirect('/yonetim/radar/ayarlar#kaynaklar');
     }
 
     /** Eklenti için yeni anahtar üretir; anahtar yalnızca bir kez gösterilir, veritabanında özeti tutulur. */

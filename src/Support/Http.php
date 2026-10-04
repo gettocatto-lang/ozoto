@@ -70,16 +70,51 @@ final class Http
     }
 
     /**
-     * Windows'taki PHP'de çoğu zaman güvenilir sertifika listesi tanımlı değildir; o durumda projedeki
-     * Mozilla listesi (config/cacert.pem) kullanılır. Sertifika doğrulaması hiçbir zaman kapatılmaz.
+     * Projedeki sertifika listesi (config/cacert.pem): Mozilla kökleri + zincirini eksik gönderen kamu sitelerinin
+     * ara sertifikaları. Windows PHP'de çoğu zaman liste hiç tanımlı olmadığı için her ortamda bu kullanılır.
+     * Sertifika doğrulaması hiçbir zaman kapatılmaz.
      */
     public static function caFile(): ?string
     {
-        if ((string) ini_get('curl.cainfo') !== '' || (string) ini_get('openssl.cafile') !== '') {
-            return null;
-        }
         $bundle = BASE_PATH . '/config/cacert.pem';
         return is_file($bundle) ? $bundle : null;
+    }
+
+    /**
+     * JSON gövdeli POST (ör. ilan.gov.tr'nin herkese açık ilan arama uç noktası).
+     *
+     * @param array<string, string> $headers
+     * @return array{status: int, body: string}
+     */
+    public static function post(string $url, string $body, array $headers = [], int $timeout = 20): array
+    {
+        if (!function_exists('curl_init')) {
+            throw new \RuntimeException('POST için curl eklentisi gerekli.');
+        }
+        $lines = ['User-Agent: ' . self::USER_AGENT];
+        foreach ($headers as $name => $value) {
+            $lines[] = $name . ': ' . $value;
+        }
+        $ch = curl_init($url);
+        $options = [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $body,
+            CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
+            CURLOPT_CONNECTTIMEOUT => min(10, $timeout),
+            CURLOPT_TIMEOUT => $timeout,
+            CURLOPT_HTTPHEADER => $lines,
+            CURLOPT_ENCODING => '',
+        ];
+        if (($caFile = self::caFile()) !== null) {
+            $options[CURLOPT_CAINFO] = $caFile;
+        }
+        curl_setopt_array($ch, $options);
+        $response = curl_exec($ch);
+        if ($response === false) {
+            throw new \RuntimeException('HTTP isteği başarısız: ' . curl_error($ch));
+        }
+        return ['status' => (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE), 'body' => (string) $response];
     }
 
     /**

@@ -59,6 +59,7 @@ $router->post('/yonetim/radar/eposta', [RadarController::class, 'saveMailSetting
 $router->post('/yonetim/radar/eposta-test', [RadarController::class, 'testMail']);
 $router->post('/yonetim/radar/eposta-onizle', [RadarController::class, 'previewMail']);
 $router->post('/yonetim/radar/eklenti-anahtar', [RadarController::class, 'extensionToken']);
+$router->post('/yonetim/radar/kaynak-testi', [RadarController::class, 'diagnose']);
 $router->get('/yonetim/radar/eklenti.zip', [RadarController::class, 'extensionDownload']);
 $router->get('/api/radar/eklenti/durum', [ExtensionController::class, 'status']);
 $router->post('/api/radar/eklenti', [ExtensionController::class, 'ingest']);
