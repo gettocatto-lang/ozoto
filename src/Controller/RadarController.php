@@ -160,9 +160,17 @@ final class RadarController
             'user' => $user,
             'apiKeySet' => SearchEngine::configured(),
             'enabled' => Settings::get('search_enabled') === '1',
-            'queries' => implode("\n", SearchEngine::queries()),
+            'queries' => implode("\n", SearchEngine::customQueries()),
             'freshness' => Settings::get('search_freshness') ?: 'pd',
-            'interval' => (int) (Settings::get('search_interval') ?: 180),
+            'interval' => (int) (Settings::get('search_interval') ?: 60),
+            'search' => [
+                'auto' => SearchEngine::autoEnabled(),
+                'generated' => count(SearchEngine::generatedQueries()),
+                'total' => count(SearchEngine::queries()),
+                'budget' => SearchEngine::budget(),
+                'used' => SearchEngine::used(),
+                'per_run' => SearchEngine::perRun(),
+            ],
             'mail' => [
                 'enabled' => Settings::get('mail_enabled') === '1',
                 'host' => Settings::get('mail_host') ?? 'localhost',
@@ -214,7 +222,9 @@ final class RadarController
         Settings::set('search_enabled', empty($_POST['search_enabled']) ? '0' : '1');
         $queries = trim(str_replace("\r\n", "\n", (string) ($_POST['search_queries'] ?? '')));
         Settings::set('search_queries', mb_substr($queries !== '' ? $queries : SearchEngine::DEFAULT_QUERIES, 0, 10000));
-        Settings::set('search_interval', (string) max(15, min(1440, (int) ($_POST['search_interval'] ?? 180))));
+        Settings::set('search_interval', (string) max(15, min(1440, (int) ($_POST['search_interval'] ?? 60))));
+        Settings::set('search_auto', empty($_POST['search_auto']) ? '0' : '1');
+        Settings::set('search_budget', (string) max(0, min(1_000_000, (int) digits((string) ($_POST['search_budget'] ?? '1000')))));
         $freshness = (string) ($_POST['search_freshness'] ?? 'pd');
         Settings::set('search_freshness', in_array($freshness, ['pd', 'pw', 'pm'], true) ? $freshness : 'pd');
         Session::flash('notice', 'Ayarlar kaydedildi.');

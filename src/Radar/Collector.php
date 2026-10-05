@@ -35,12 +35,12 @@ final class Collector
         }
 
         // Arama motoru ücretli kredi harcadığı için ayarlanan aralıktan sık çalışmaz.
-        $interval = max(15, (int) (Settings::get('search_interval') ?: 180)) * 60;
+        $interval = max(15, (int) (Settings::get('search_interval') ?: 60)) * 60;
         $searchDue = time() - (int) strtotime((string) (Settings::get('search_last_run') ?? '2000-01-01')) >= $interval;
         if (Settings::get('search_enabled') === '1' && ($searchDue || $force)) {
             Settings::set('search_last_run', now());
             $runId = self::startRun(SearchEngine::NAME);
-            $result = SearchEngine::run($deadline - 5);
+            $result = SearchEngine::run($deadline - 5, $force ? max(1, min(10, SearchEngine::perRun())) : SearchEngine::perRun());
             $summary['found'] += $result['found'];
             $summary['added'] += $result['added'];
             $message = sprintf('%d sorgu, %d ilan, %d yeni', $result['queries'], $result['found'], $result['added']);
