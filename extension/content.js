@@ -1,7 +1,8 @@
 /*
  * Öz Oto Radar — içerik betiği.
- * PASİF çalışır: yalnızca ekranda açık olan sayfadaki ilan kartlarını okur ve Radar'a gönderir.
- * Kendi kendine sayfa gezmez, kaydırmaz, tıklamaz. Satıcı adı/telefonu gönderilmez (telefon desenleri silinir).
+ * PASİF çalışır: yalnızca ekranda açık olan sayfadaki ilan kartlarını okur, Radar'a gönderir, puanları rozet ve
+ * sağ üstteki "kelepir paneli"nde gösterir. Kendi kendine sayfa gezmez, kaydırmaz, tıklamaz.
+ * Satıcı adı/telefonu gönderilmez (telefon desenleri silinir).
  */
 (() => {
   'use strict';
@@ -17,8 +18,10 @@
 
   /** @type {Map<string, {url: string, result: object|null, retries: number}>} */
   const sent = new Map();
-  /** @type {Map<string, Element>} */
-  const cards = new Map();
+  /** Sayfada görülen ilanlar (panel başlığı ve karta kaydırma için). @type {Map<string, object>} */
+  const known = new Map();
+  let settings = { enabled: true, panel: true, panelMin: 50 };
+  let lastError = '';
 
   function listingKey(href) {
     let u;
@@ -189,6 +192,155 @@
     }
   }
 
+  // ---- Kelepir paneli: bu sayfadaki en iyi ilanlar tek bakışta (sağ üst, Shadow DOM) --------------
+  const PANEL_CSS = `
+    :host { all: initial; position: fixed; top: 12px; right: 12px; z-index: 2147483647; }
+    .box { width: 310px; max-height: 70vh; display: flex; flex-direction: column; background: #0b0f12; color: #eceff0;
+      border: 1px solid #1c2329; border-radius: 10px; box-shadow: 0 10px 28px rgba(0,0,0,.35);
+      font: 13px/1.35 system-ui, -apple-system, "Segoe UI", sans-serif; overflow: hidden; }
+    header { display: flex; align-items: center; gap: 8px; padding: 9px 11px; cursor: pointer; user-select: none; }
+    header span { flex: 1; min-width: 0; }
+    header strong { display: block; font-size: 13px; }
+    header small { display: block; color: #9aa5ab; font-size: 11.5px; }
+    header i { font-style: normal; color: #9aa5ab; }
+    .dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: #3a434a; }
+    .dot.on { background: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,.25); }
+    ol { list-style: none; margin: 0; padding: 0 6px 6px; overflow: auto; }
+    li { display: flex; align-items: center; gap: 8px; padding: 7px 6px; border-radius: 7px; cursor: pointer; }
+    li:hover { background: #151b20; }
+    b { flex: none; display: inline-grid; place-items: center; min-width: 26px; height: 22px; padding: 0 4px; border-radius: 999px; font-size: 12px; }
+    .hot b { background: #22c55e; color: #052e16; }
+    .good b { background: #86efac; color: #052e16; }
+    .ok b { background: #fcd34d; color: #3b2a00; }
+    .low b { background: #3a434a; color: #cfd6da; }
+    .t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .d { flex: none; color: #86efac; font-weight: 600; font-size: 12px; }
+    .w .d { color: #fca5a5; }
+    a { flex: none; color: #9aa5ab; text-decoration: none; padding: 0 2px; }
+    a:hover { color: #eceff0; }
+    .empty { margin: 0; padding: 0 12px 11px; color: #9aa5ab; font-size: 12px; }
+    .collapsed ol, .collapsed .empty { display: none; }
+  `;
+  let panel = null;
+  let collapsed = false;
+  chrome.storage.local.get({ panelCollapsed: false }).then((v) => {
+    collapsed = !!v.panelCollapsed;
+    if (panel) panel.box.classList.toggle('collapsed', collapsed);
+  });
+
+  function ensurePanel() {
+    if (panel && panel.host.isConnected) return panel;
+    const host = document.createElement('div');
+    host.setAttribute('data-oz-radar', 'panel');
+    const shadow = host.attachShadow({ mode: 'open' });
+    const style = new CSSStyleSheet();
+    style.replaceSync(PANEL_CSS);
+    shadow.adoptedStyleSheets = [style];
+    const box = document.createElement('div');
+    box.className = 'box' + (collapsed ? ' collapsed' : '');
+    const header = document.createElement('header');
+    header.title = 'Aç / kapat';
+    const dot = document.createElement('span');
+    dot.className = 'dot';
+    const label = document.createElement('span');
+    const toggle = document.createElement('i');
+    header.append(dot, label, toggle);
+    const list = document.createElement('ol');
+    const empty = document.createElement('p');
+    empty.className = 'empty';
+    box.append(header, list, empty);
+    shadow.append(box);
+    header.addEventListener('click', () => {
+      collapsed = !collapsed;
+      box.classList.toggle('collapsed', collapsed);
+      toggle.textContent = collapsed ? '▸' : '▾';
+      chrome.storage.local.set({ panelCollapsed: collapsed });
+    });
+    toggle.textContent = collapsed ? '▸' : '▾';
+    document.documentElement.appendChild(host);
+    panel = { host, box, dot, label, list, empty };
+    return panel;
+  }
+
+  function flash(el) {
+    if (!el || !el.isConnected) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const outline = el.style.outline;
+    const offset = el.style.outlineOffset;
+    el.style.outline = '3px solid #22c55e';
+    el.style.outlineOffset = '2px';
+    setTimeout(() => {
+      el.style.outline = outline;
+      el.style.outlineOffset = offset;
+    }, 2200);
+  }
+
+  function updatePanel() {
+    // Tek ilanlık detay sayfasında panel gerekmez; rozet yeter.
+    if (!settings.panel || known.size < 2) {
+      if (panel) panel.host.remove();
+      return;
+    }
+    let scored = 0;
+    let waiting = 0;
+    const rows = [];
+    for (const [key, it] of known) {
+      const state = sent.get(key);
+      if (!state) continue; // gönderilemedi; bir sonraki sayfa değişikliğinde yeniden denenir
+      const r = state.result;
+      if (!r || r.pending) {
+        waiting++;
+        continue;
+      }
+      scored++;
+      if (typeof r.score === 'number' && r.score >= settings.panelMin) rows.push({ it, r });
+    }
+    rows.sort((a, b) => b.r.score - a.r.score);
+
+    const p = ensurePanel();
+    p.dot.className = 'dot' + (rows.length ? ' on' : '');
+    const title = document.createElement('strong');
+    title.textContent = 'Öz Oto Radar · ' + (rows.length ? rows.length + ' kelepir' : 'kelepir yok');
+    const sub = document.createElement('small');
+    sub.textContent = scored + ' ilan puanlandı' + (waiting ? ' · ' + waiting + ' değerleniyor' : '') + ' · eşik ' + settings.panelMin;
+    p.label.replaceChildren(title, sub);
+
+    p.list.replaceChildren(...rows.slice(0, 15).map(({ it, r }) => {
+      const li = document.createElement('li');
+      const level = r.score >= 70 ? 'hot' : r.score >= 50 ? 'good' : r.score >= 30 ? 'ok' : 'low';
+      li.className = level + (r.suspicious ? ' w' : '');
+      const b = document.createElement('b');
+      b.textContent = String(r.score);
+      const t = document.createElement('span');
+      t.className = 't';
+      t.textContent = it.title || it.url;
+      t.title = it.title || it.url;
+      const d = document.createElement('span');
+      d.className = 'd';
+      d.textContent = r.suspicious ? 'şüpheli' : typeof r.discount === 'number' && r.discount > 0 ? '%' + Math.round(r.discount) + '↓' : '';
+      li.append(b, t, d);
+      if (r.link) {
+        const a = document.createElement('a');
+        a.href = r.link;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        a.textContent = '↗';
+        a.title = "Radar'da aç";
+        a.addEventListener('click', (e) => e.stopPropagation());
+        li.append(a);
+      }
+      li.addEventListener('click', () => flash(it.card && it.card.isConnected ? it.card : it.anchor));
+      return li;
+    }));
+    p.empty.textContent = rows.length
+      ? ''
+      : lastError && !scored
+        ? "Radar'a ulaşılamadı: " + lastError
+        : waiting
+          ? 'Puanlar geliyor…'
+          : 'Bu sayfada eşiğin üstünde ilan yok. Sonraki sayfaya geçebilirsin.';
+  }
+
   // ---- Gönderim ----------------------------------------------------------------------------------
   async function send(batch) {
     let response;
@@ -202,8 +354,11 @@
     }
     if (!response || !response.ok) {
       for (const it of batch) sent.delete(it.key);
+      lastError = (response && response.error) || 'bilinmeyen hata';
+      updatePanel();
       return;
     }
+    lastError = '';
     const byUrl = new Map(batch.map((it) => [it.url, it]));
     const pending = [];
     for (const r of response.results || []) {
@@ -217,6 +372,7 @@
         pending.push(it);
       }
     }
+    updatePanel();
     if (pending.length) setTimeout(() => send(pending), 8000);
   }
 
@@ -231,12 +387,12 @@
     running = true;
     again = false;
     try {
-      const { enabled } = await chrome.storage.sync.get({ enabled: true });
-      if (!enabled) return;
+      settings = await chrome.storage.sync.get({ enabled: true, panel: true, panelMin: 50 });
+      if (!settings.enabled) return;
       const items = collect();
       const fresh = [];
       for (const it of items) {
-        cards.set(it.key, it.card);
+        known.set(it.key, it);
         const state = sent.get(it.key);
         if (state) {
           if (state.result) badge(it, state.result);
@@ -245,6 +401,7 @@
           fresh.push(it);
         }
       }
+      updatePanel();
       for (let i = 0; i < fresh.length; i += BATCH) {
         await send(fresh.slice(i, i + BATCH));
       }
