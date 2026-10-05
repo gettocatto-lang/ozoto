@@ -59,6 +59,14 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       });
     return true;
   }
+  if (message && message.type === 'detail' && message.payload) {
+    call('/api/radar/eklenti/detay', { method: 'POST', body: JSON.stringify(message.payload) })
+      .then(async (result) => {
+        await remember(result, 1);
+        sendResponse(result);
+      });
+    return true;
+  }
   if (message && message.type === 'test') {
     call('/api/radar/eklenti/durum').then(sendResponse);
     return true;

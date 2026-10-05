@@ -9,7 +9,7 @@ use PDO;
 final class Database
 {
     /** Şemaya tablo eklendikçe artırılır; kurulu sitelerde eksik tablolar ilk bağlantıda oluşturulur. */
-    public const SCHEMA_VERSION = 3;
+    public const SCHEMA_VERSION = 4;
 
     private static ?PDO $pdo = null;
 

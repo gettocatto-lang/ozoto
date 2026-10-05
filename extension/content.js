@@ -20,7 +20,7 @@
   const sent = new Map();
   /** Sayfada görülen ilanlar (panel başlığı ve karta kaydırma için). @type {Map<string, object>} */
   const known = new Map();
-  let settings = { enabled: true, panel: true, panelMin: 50 };
+  let settings = { enabled: true, panel: true, panelMin: 50, analysis: true };
   let lastError = '';
 
   function listingKey(href) {
@@ -98,6 +98,8 @@
       let card = a;
       let node = a.parentElement;
       for (let depth = 0; depth < 10 && node && node !== document.body; depth++, node = node.parentElement) {
+        // İlan kartları kısadır; ilan detay sayfasındaki "benzer ilanlar" linki sayfanın tamamını kart sanmasın.
+        if ((node.textContent || '').length > 1200 || node.querySelector('h1')) break;
         const other = [...node.querySelectorAll('a[href]')].some((x) => {
           const kk = keyOf.get(x);
           return kk && kk.key !== k.key;
@@ -123,7 +125,8 @@
     }
 
     const self = listingKey(location.href);
-    if (self && !items.has(self.key)) {
+    // Detay sayfası eksper analiziyle ayrıca gönderilir; açıkken kaba liste okumasıyla gönderilmez.
+    if (self && !items.has(self.key) && !settings.analysis) {
       const h1 = document.querySelector('h1');
       items.set(self.key, { key: self.key, url: self.url, title: clean(h1 ? h1.innerText : document.title), text: detailText(), card: h1, anchor: h1 });
     }
@@ -276,8 +279,8 @@
   }
 
   function updatePanel() {
-    // Tek ilanlık detay sayfasında panel gerekmez; rozet yeter.
-    if (!settings.panel || known.size < 2) {
+    // Detay sayfasında eksper kartı gösterilir; liste paneli yalnızca liste sayfalarında.
+    if (!settings.panel || known.size < 2 || listingKey(location.href)) {
       if (panel) panel.host.remove();
       return;
     }
@@ -341,6 +344,259 @@
           : 'Bu sayfada eşiğin üstünde ilan yok. Sonraki sayfaya geçebilirsin.';
   }
 
+  // ---- İlan detay sayfası: eksper analizi ----------------------------------------------------------
+  // Kullanıcının açtığı ilan sayfasındaki araç bilgilerini, boya-değişen bölümünü ve açıklamayı okuyup Radar'a gönderir;
+  // sunucunun ürettiği AL / PAZARLIK / GEÇ analizini sağda bir kartta gösterir. Satıcı kutuları okunmaz.
+  const DAMAGE_HINT = /boya|değişen|degisen|hasar|ekspertiz|expertiz|tramer/i;
+  const PRIVATE = /seller|owner|contact|phone|telefon|magaza|mağaza|store-?info|profile|user-?info|userbox|classifieduser|member-?info|uye-?bilgi/i;
+  const BLOCK = new Set(['ADDRESS', 'ARTICLE', 'ASIDE', 'BLOCKQUOTE', 'BR', 'DD', 'DIV', 'DL', 'DT', 'FIELDSET', 'FIGCAPTION', 'FIGURE',
+    'FORM', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'HR', 'LI', 'MAIN', 'OL', 'P', 'PRE', 'SECTION', 'TABLE', 'TBODY', 'TD', 'TH', 'THEAD', 'TR', 'UL']);
+  const cleanLines = (s) => String(s || '').split('\n').map((l) => l.replace(/\s+/g, ' ').replace(PHONE, '[tel]').trim()).filter(Boolean).join('\n');
+
+  /** Blok öğeleri arasında satır sonu koruyan metin (ayrık kopyada da çalışır). */
+  function blockText(root, max = 15000) {
+    const out = [];
+    let length = 0;
+    const walk = (n) => {
+      if (length > max) return;
+      if (n.nodeType === 3) {
+        const t = n.nodeValue;
+        if (t && t.trim()) {
+          out.push(t);
+          length += t.length;
+        }
+        return;
+      }
+      if (n.nodeType !== 1) return;
+      const tag = n.tagName.toUpperCase();
+      if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'NOSCRIPT' || tag === 'TEMPLATE' || tag === 'SVG') return;
+      const block = BLOCK.has(tag);
+      if (block) out.push('\n');
+      for (const c of n.childNodes) walk(c);
+      out.push(block ? '\n' : tag === 'TD' || tag === 'TH' || tag === 'SPAN' ? ' ' : '');
+    };
+    walk(root);
+    return cleanLines(out.join('')).slice(0, max);
+  }
+
+  function detailPayload() {
+    const source = document.querySelector('main') || document.body;
+    const root = source.cloneNode(true);
+    root.querySelectorAll('script, style, noscript, template, iframe, canvas, video, header, footer, nav, [data-oz-radar]').forEach((n) => n.remove());
+    const total = (root.textContent || '').length || 1;
+    for (const n of [...root.querySelectorAll('[class], [id]')]) {
+      const name = (n.getAttribute('class') || '') + ' ' + (n.id || '');
+      // Satıcı/iletişim kutuları (kişisel veri) alınmaz; ama sayfanın büyük kısmını kapsayan bir sarmalayıcı silinmez.
+      if (PRIVATE.test(name) && (n.textContent || '').length < total * 0.4) n.remove();
+    }
+
+    const pairs = [];
+    const seen = new Set();
+    const add = (label, value) => {
+      const l = clean(label).replace(/\s*:$/, '');
+      const v = clean(value);
+      if (!l || !v || l.length > 40 || v.length > 160 || l === v || /^[\d.,\s₺]+$/.test(l)) return;
+      const k = l.toLocaleLowerCase('tr');
+      if (seen.has(k)) return;
+      seen.add(k);
+      pairs.push([l, v]);
+    };
+    for (const el of root.querySelectorAll('li, tr, dl, div, p, span')) {
+      if (pairs.length >= 250) break;
+      if (el.tagName === 'DL') {
+        for (const dt of el.querySelectorAll(':scope > dt')) {
+          const dd = dt.nextElementSibling;
+          if (dd && dd.tagName === 'DD') add(dt.textContent, dd.textContent);
+        }
+        continue;
+      }
+      const kids = [...el.children].filter((c) => (c.textContent || '').trim());
+      if (kids.length === 2 && (el.textContent || '').length <= 220) {
+        add(kids[0].textContent, kids[1].textContent);
+      } else if ((el.tagName === 'LI' || el.tagName === 'P') && kids.length <= 1) {
+        const m = (el.textContent || '').trim().match(/^([^:\n]{2,40}):\s*([^\n]{1,140})$/);
+        if (m) add(m[1], m[2]);
+      }
+    }
+
+    const sections = [];
+    const used = new Set();
+    for (const h of root.querySelectorAll('h1, h2, h3, h4, h5, h6, strong, b, legend, dt, th, [class*="title" i], [class*="header" i]')) {
+      const t = clean(h.textContent);
+      if (!t || t.length > 60 || !DAMAGE_HINT.test(t)) continue;
+      let box = h.parentElement;
+      while (box && box !== root && (box.textContent || '').length < t.length + 30) box = box.parentElement;
+      if (!box || used.has(box) || (box.textContent || '').length > 6000) continue;
+      used.add(box);
+      // Araç şemasında durum sınıf adıyla verilebilir: sınıftan durum, başlık/etiketten parça adı.
+      const extra = [];
+      for (const el of box.querySelectorAll('[class]')) {
+        const cls = el.getAttribute('class') || '';
+        const status = /lokal|local/i.test(cls) ? 'Lokal boyalı' : /degis|değiş|changed|replac/i.test(cls) ? 'Değişen' : /boya|paint/i.test(cls) ? 'Boyalı' : '';
+        if (!status) continue;
+        const name = el.getAttribute('title') || el.getAttribute('aria-label') || el.getAttribute('data-name') || el.getAttribute('data-part') || el.getAttribute('alt') || clean(el.textContent);
+        if (name && name.length <= 40) extra.push(status + ': ' + clean(name));
+      }
+      sections.push({ title: t, text: (blockText(box, 4000) + (extra.length ? '\n' + extra.join('\n') : '')).slice(0, 4000) });
+      if (sections.length >= 8) break;
+    }
+
+    let description = '';
+    for (const el of root.querySelectorAll('#classifiedDescription, [id*="description" i], [class*="description" i], [id*="aciklama" i], [class*="aciklama" i], [class*="explanation" i]')) {
+      const t = blockText(el, 6000);
+      if (t.length > description.length) description = t;
+    }
+    const h1 = document.querySelector('h1');
+    const priceMatch = ((document.querySelector('main') || document.body).innerText.match(/\d{1,3}(?:\.\d{3})+\s*(?:TL|₺)/) || [])[0] || '';
+    return {
+      url: (listingKey(location.href) || {}).url || location.href,
+      title: clean(h1 ? h1.innerText : document.title),
+      price_text: priceMatch,
+      pairs,
+      sections,
+      description,
+      text: blockText(root, 15000),
+    };
+  }
+
+  const CARD_CSS = `
+    :host { all: initial; position: fixed; top: 12px; right: 12px; z-index: 2147483647; }
+    .box { width: 380px; max-height: 86vh; display: flex; flex-direction: column; background: #0b0f12; color: #eceff0;
+      border: 1px solid #1c2329; border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,.4);
+      font: 13px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; overflow: hidden; }
+    header { padding: 11px 12px; cursor: pointer; user-select: none; border-bottom: 1px solid #1c2329; }
+    .top { display: flex; align-items: center; gap: 8px; }
+    .v { flex: none; padding: 3px 9px; border-radius: 999px; font-weight: 800; font-size: 12px; letter-spacing: .02em; }
+    .v.al { background: #22c55e; color: #052e16; } .v.pazarlik { background: #fcd34d; color: #3b2a00; }
+    .v.gec { background: #ef4444; color: #fff; } .v.eksik { background: #3a434a; color: #e5e7eb; }
+    .top strong { flex: 1; font-size: 13px; } .top i { font-style: normal; color: #9aa5ab; }
+    .head { margin: 7px 0 0; color: #d6dde0; }
+    .body { overflow: auto; padding: 4px 12px 12px; }
+    .collapsed .body { display: none; } .collapsed .head { display: none; }
+    h4 { margin: 12px 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: #9aa5ab; }
+    table { width: 100%; border-collapse: collapse; }
+    td { padding: 3px 0; vertical-align: top; } td:last-child { text-align: right; font-weight: 600; padding-left: 10px; }
+    ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
+    li { padding-left: 14px; position: relative; } li::before { content: "•"; position: absolute; left: 2px; color: #64748b; }
+    li.red::before { content: "!"; color: #f87171; font-weight: 800; } li.amber::before { content: "▲"; color: #fbbf24; font-size: 9px; top: 3px; }
+    li.green::before { content: "✓"; color: #4ade80; } li.red { color: #fecaca; }
+    p { margin: 0 0 8px; color: #d6dde0; }
+    a { color: #86efac; } .foot { display: flex; justify-content: space-between; gap: 8px; margin-top: 10px; font-size: 12px; }
+    .muted { color: #9aa5ab; }
+  `;
+  let card = null;
+  let cardCollapsed = false;
+  chrome.storage.local.get({ cardCollapsed: false }).then((v) => {
+    cardCollapsed = !!v.cardCollapsed;
+    if (card) card.box.classList.toggle('collapsed', cardCollapsed);
+  });
+
+  function ensureCard() {
+    if (card && card.host.isConnected) return card;
+    const host = document.createElement('div');
+    host.setAttribute('data-oz-radar', 'analysis');
+    const shadow = host.attachShadow({ mode: 'open' });
+    const style = new CSSStyleSheet();
+    style.replaceSync(CARD_CSS);
+    shadow.adoptedStyleSheets = [style];
+    const box = document.createElement('div');
+    box.className = 'box' + (cardCollapsed ? ' collapsed' : '');
+    const header = document.createElement('header');
+    const body = document.createElement('div');
+    body.className = 'body';
+    box.append(header, body);
+    shadow.append(box);
+    header.addEventListener('click', () => {
+      cardCollapsed = !cardCollapsed;
+      box.classList.toggle('collapsed', cardCollapsed);
+      chrome.storage.local.set({ cardCollapsed });
+    });
+    document.documentElement.appendChild(host);
+    card = { host, box, header, body };
+    return card;
+  }
+
+  const el = (tag, cls, text) => {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text !== undefined) n.textContent = text;
+    return n;
+  };
+
+  function renderCard(state, res) {
+    const c = ensureCard();
+    const top = el('div', 'top');
+    const a = res && res.analysis;
+    if (state === 'loading') {
+      top.append(el('span', 'v eksik', '…'), el('strong', '', 'Öz Oto Radar inceliyor…'));
+      c.header.replaceChildren(top);
+      c.body.replaceChildren(el('p', 'muted', 'Araç bilgileri, boya-değişen, tramer ve açıklama okunuyor.'));
+      return;
+    }
+    if (state === 'error' || !a) {
+      top.append(el('span', 'v eksik', '!'), el('strong', '', 'Öz Oto Radar'));
+      c.header.replaceChildren(top);
+      c.body.replaceChildren(el('p', 'muted', 'Analiz yapılamadı: ' + ((res && res.error) || 'sunucudan yanıt yok')));
+      return;
+    }
+    top.append(el('span', 'v ' + a.verdict, a.verdict_label), el('strong', '', a.score !== null && a.score !== undefined ? 'Puan ' + a.score : 'Öz Oto Radar'), el('i', '', cardCollapsed ? '▸' : '▾'));
+    c.header.replaceChildren(top, el('p', 'head', a.headline || ''));
+    const nodes = [];
+    for (const b of a.blocks || []) {
+      nodes.push(el('h4', '', b.title || ''));
+      if (b.type === 'kv') {
+        const table = el('table');
+        for (const [k, v] of b.rows || []) {
+          const tr = el('tr');
+          tr.append(el('td', '', k), el('td', '', v));
+          table.append(tr);
+        }
+        nodes.push(table);
+      } else if (b.type === 'list') {
+        const ul = el('ul');
+        for (const item of b.items || []) ul.append(el('li', item.level || '', item.text));
+        nodes.push(ul);
+      } else if (b.type === 'text') {
+        for (const p of b.paragraphs || []) nodes.push(el('p', '', p));
+      }
+    }
+    const foot = el('div', 'foot');
+    const link = el('a', '', "Radar'da aç ↗");
+    link.href = res.link;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    foot.append(el('span', 'muted', 'Güven: ' + (a.confidence || '—')), link);
+    nodes.push(foot);
+    c.body.replaceChildren(...nodes);
+  }
+
+  let analyzedHref = '';
+  async function maybeAnalyze() {
+    const self = listingKey(location.href);
+    if (!self || !settings.analysis) {
+      if (card) card.host.remove();
+      return;
+    }
+    if (analyzedHref === location.href) return;
+    // Sayfanın ana içeriği yüklenmeden okuma (tek sayfa uygulamaları).
+    if (!document.querySelector('h1') && (document.body.innerText || '').length < 1500) return;
+    analyzedHref = location.href;
+    renderCard('loading');
+    let res;
+    try {
+      res = await chrome.runtime.sendMessage({ type: 'detail', payload: detailPayload() });
+    } catch (e) {
+      res = { ok: false, error: String(e && e.message ? e.message : e) };
+    }
+    if (analyzedHref !== location.href) return;
+    if (!res || !res.ok) {
+      analyzedHref = '';
+      renderCard('error', res);
+      return;
+    }
+    renderCard('done', res);
+  }
+
   // ---- Gönderim ----------------------------------------------------------------------------------
   async function send(batch) {
     let response;
@@ -387,7 +643,7 @@
     running = true;
     again = false;
     try {
-      settings = await chrome.storage.sync.get({ enabled: true, panel: true, panelMin: 50 });
+      settings = await chrome.storage.sync.get({ enabled: true, panel: true, panelMin: 50, analysis: true });
       if (!settings.enabled) return;
       const items = collect();
       const fresh = [];
@@ -402,6 +658,7 @@
         }
       }
       updatePanel();
+      maybeAnalyze();
       for (let i = 0; i < fresh.length; i += BATCH) {
         await send(fresh.slice(i, i + BATCH));
       }

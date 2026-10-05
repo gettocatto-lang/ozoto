@@ -1,5 +1,5 @@
 'use strict';
-const DEFAULTS = { server: 'https://ozoto.online', token: '', enabled: true, panel: true, panelMin: 50 };
+const DEFAULTS = { server: 'https://ozoto.online', token: '', enabled: true, panel: true, panelMin: 50, analysis: true };
 const $ = (id) => document.getElementById(id);
 const say = (text, ok) => {
   $('status').textContent = text;
@@ -12,6 +12,7 @@ chrome.storage.sync.get(DEFAULTS).then((s) => {
   $('enabled').checked = s.enabled;
   $('panel').checked = s.panel;
   $('panelMin').value = s.panelMin;
+  $('analysis').checked = s.analysis;
 });
 
 async function save() {
@@ -32,7 +33,7 @@ async function save() {
     }
   }
   const panelMin = Math.max(0, Math.min(100, parseInt($('panelMin').value, 10) || 0));
-  await chrome.storage.sync.set({ server, token: $('token').value.trim(), enabled: $('enabled').checked, panel: $('panel').checked, panelMin });
+  await chrome.storage.sync.set({ server, token: $('token').value.trim(), enabled: $('enabled').checked, panel: $('panel').checked, panelMin, analysis: $('analysis').checked });
   say('Kaydedildi.', true);
   return true;
 }

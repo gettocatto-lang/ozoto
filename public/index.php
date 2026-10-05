@@ -64,6 +64,7 @@ $router->post('/yonetim/radar/eposta-test', [RadarController::class, 'testMail']
 $router->post('/yonetim/radar/eposta-onizle', [RadarController::class, 'previewMail']);
 $router->get('/yonetim/radar/eposta-kutusu', [RadarController::class, 'mailbox']);
 $router->post('/yonetim/radar/telegram', [RadarController::class, 'saveTelegram']);
+$router->post('/yonetim/radar/kar-ayarlari', [RadarController::class, 'saveDeal']);
 $router->post('/yonetim/radar/telegram-bagla', [RadarController::class, 'linkTelegram']);
 $router->post('/yonetim/radar/telegram-test', [RadarController::class, 'testTelegram']);
 $router->post('/yonetim/radar/eklenti-anahtar', [RadarController::class, 'extensionToken']);
@@ -72,6 +73,7 @@ $router->post('/yonetim/radar/kaynak-incele', [RadarController::class, 'probe'])
 $router->get('/yonetim/radar/eklenti.zip', [RadarController::class, 'extensionDownload']);
 $router->get('/api/radar/eklenti/durum', [ExtensionController::class, 'status']);
 $router->post('/api/radar/eklenti', [ExtensionController::class, 'ingest']);
+$router->post('/api/radar/eklenti/detay', [ExtensionController::class, 'detail']);
 $router->post('/yonetim/radar/arama-kaydet', [RadarController::class, 'saveSearch']);
 $router->post('/yonetim/radar/arama-sil/{id}', [RadarController::class, 'deleteSearch']);
 $router->get('/yonetim/radar/{id}', [RadarController::class, 'show']);

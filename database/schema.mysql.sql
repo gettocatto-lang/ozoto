@@ -145,3 +145,11 @@ CREATE TABLE IF NOT EXISTS radar_alerts (
     channel VARCHAR(20) NOT NULL,
     sent_at DATETIME NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS radar_details (
+    listing_id INT UNSIGNED NOT NULL PRIMARY KEY,
+    data MEDIUMTEXT NOT NULL,
+    analysis MEDIUMTEXT NULL,
+    raw MEDIUMTEXT NULL,
+    updated_at DATETIME NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

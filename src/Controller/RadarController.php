@@ -8,6 +8,8 @@ use Ozoto\Auth;
 use Ozoto\Csrf;
 use Ozoto\Database;
 use Ozoto\Radar\Collector;
+use Ozoto\Radar\DealAnalyzer;
+use Ozoto\Radar\Details;
 use Ozoto\Radar\Diagnostics;
 use Ozoto\Radar\ListingParser;
 use Ozoto\Radar\Listings;
@@ -53,6 +55,7 @@ final class RadarController
             'l' => $listing,
             'history' => Listings::priceHistory((int) $listing['id']),
             'notes' => json_decode((string) ($listing['score_notes'] ?? '[]'), true) ?: [],
+            'details' => Details::find((int) $listing['id']),
             'options' => $this->options(),
             'notice' => Session::pull('notice'),
         ], 'admin/layout');
@@ -174,6 +177,7 @@ final class RadarController
             'preview' => Session::pull('preview'),
             'diagnostics' => Diagnostics::last(),
             'probe' => Diagnostics::lastProbe(),
+            'deal' => DealAnalyzer::settings(),
             'telegram' => [
                 'token_set' => Settings::secret('tg_token') !== '',
                 'bot' => (string) Settings::get('tg_bot', ''),
@@ -215,6 +219,23 @@ final class RadarController
         Settings::set('search_freshness', in_array($freshness, ['pd', 'pw', 'pm'], true) ? $freshness : 'pd');
         Session::flash('notice', 'Ayarlar kaydedildi.');
         redirect('/yonetim/radar/ayarlar');
+    }
+
+    /** Eksper analizindeki masraf ve hedef kâr ayarları; kaydedince mevcut analizler yeniden hesaplanır. */
+    public function saveDeal(): void
+    {
+        Auth::require();
+        if (!Csrf::valid()) {
+            abort(419);
+        }
+        foreach (DealAnalyzer::SETTINGS as $key => [, $default]) {
+            $value = digits((string) ($_POST[$key] ?? ''));
+            Settings::set($key, $value === '' ? (string) $default : (string) min(10_000_000, (int) $value));
+        }
+        @set_time_limit(120);
+        $count = DealAnalyzer::refreshAll(microtime(true) + 60);
+        Session::flash('notice', 'Kâr ayarları kaydedildi; ' . $count . ' analiz yeniden hesaplandı.');
+        redirect('/yonetim/radar/ayarlar#kar');
     }
 
     /** Telegram bildirimi: bot anahtarı, eşik puanı, aç/kapa. */

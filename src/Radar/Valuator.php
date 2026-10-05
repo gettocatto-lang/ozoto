@@ -23,18 +23,17 @@ final class Valuator
     ];
 
     /**
+     * Hasarsız piyasa değeri: TSB kasko + km düzeltmesi, yeterli benzer ilan varsa onların medyanıyla harmanlanır.
+     *
      * @param array<string, mixed> $l radar_listings satırı
-     * @return array{tsb_value: ?int, tsb_label: ?string, market_value: ?int, discount_pct: ?float, score: ?int,
-     *               suspicious: int, score_notes: string, needs_valuation: int, valued_at: string}
+     * @return array{clean: ?int, tsb: ?array{value: int, label: string}, comps: int, median: ?int, notes: list<string>, retry: bool}
      */
-    public static function valuate(array $l): array
+    public static function appraise(array $l): array
     {
         $notes = [];
         $retry = false;
         $year = $l['model_year'] !== null ? (int) $l['model_year'] : null;
         $km = $l['km'] !== null ? (int) $l['km'] : null;
-        $price = $l['price'] !== null ? (int) $l['price'] : null;
-        $auction = (int) $l['is_auction'] === 1;
 
         $tsb = null;
         if ($l['brand'] && $l['model'] && $year !== null) {
@@ -56,7 +55,6 @@ final class Valuator
         if ($tsb !== null) {
             $base = (float) $tsb['value'];
             $notes[] = 'TSB kasko değeri: ' . format_tl($tsb['value']) . ' — ' . $tsb['label'];
-
             if ($km !== null && $year !== null) {
                 $age = max(0.5, (int) date('Y') - $year + 0.5);
                 $diff = ($km - $age * self::KM_PER_YEAR) / 10_000;
@@ -66,23 +64,55 @@ final class Valuator
                     $notes[] = sprintf('Km düzeltmesi: %+d%% (yaşına göre beklenen ≈ %s km)', (int) round(($factor - 1) * 100), format_number((int) round($age * self::KM_PER_YEAR)));
                 }
             }
-
-            $damage = (string) ($l['damage'] ?? '');
-            if (isset(self::DAMAGE_FACTORS[$damage]) && self::DAMAGE_FACTORS[$damage] < 1) {
-                $base *= self::DAMAGE_FACTORS[$damage];
-                $notes[] = sprintf('Hasar düzeltmesi (%s): %d%%', $damage, (int) round((self::DAMAGE_FACTORS[$damage] - 1) * 100));
-            }
         }
 
         $comps = self::comparables($l);
-        $market = $base !== null ? (int) round($base) : null;
+        $clean = $base !== null ? (int) round($base) : null;
+        $median = null;
         if (count($comps) >= 5) {
             $median = self::median($comps);
             $notes[] = sprintf('Benzer %d ilanın medyan fiyatı: %s', count($comps), format_tl($median));
-            $market = $market !== null ? (int) round(0.5 * $market + 0.5 * $median) : $median;
-        } elseif (count($comps) >= 3 && $market === null) {
-            $market = self::median($comps);
-            $notes[] = sprintf('Benzer %d ilanın medyan fiyatı: %s (TSB değeri yok, güven düşük)', count($comps), format_tl($market));
+            $clean = $clean !== null ? (int) round(0.5 * $clean + 0.5 * $median) : $median;
+        } elseif (count($comps) >= 3 && $clean === null) {
+            $median = self::median($comps);
+            $clean = $median;
+            $notes[] = sprintf('Benzer %d ilanın medyan fiyatı: %s (TSB değeri yok, güven düşük)', count($comps), format_tl($median));
+        }
+
+        return ['clean' => $clean, 'tsb' => $tsb, 'comps' => count($comps), 'median' => $median, 'notes' => $notes, 'retry' => $retry];
+    }
+
+    /**
+     * @param array<string, mixed> $l radar_listings satırı
+     * @return array{tsb_value: ?int, tsb_label: ?string, market_value: ?int, discount_pct: ?float, score: ?int,
+     *               suspicious: int, score_notes: string, needs_valuation: int, valued_at: string}
+     */
+    public static function valuate(array $l): array
+    {
+        $price = $l['price'] !== null ? (int) $l['price'] : null;
+        $auction = (int) $l['is_auction'] === 1;
+        $appraisal = self::appraise($l);
+        $notes = $appraisal['notes'];
+        $retry = $appraisal['retry'];
+        $tsb = $appraisal['tsb'];
+        $market = $appraisal['clean'];
+
+        // Hasar: ilan detay sayfası okunduysa parça parça hesap, yoksa ilandaki genel hasar bilgisi.
+        $details = isset($l['id']) ? Details::data((int) $l['id']) : null;
+        if ($market !== null && $details !== null && DamageModel::hasInfo($details)) {
+            $damage = DamageModel::assess($details, $market);
+            if ($damage['pct'] > 0) {
+                $market = (int) round($market * (1 - $damage['pct']));
+                $notes[] = 'Hasar düzeltmesi (ilan detayından): −' . DamageModel::pct($damage['pct']) . ' — ' . $damage['summary'];
+            } else {
+                $notes[] = 'Hasar: ' . $damage['summary'];
+            }
+        } elseif ($market !== null) {
+            $damage = (string) ($l['damage'] ?? '');
+            if (isset(self::DAMAGE_FACTORS[$damage]) && self::DAMAGE_FACTORS[$damage] < 1) {
+                $market = (int) round($market * self::DAMAGE_FACTORS[$damage]);
+                $notes[] = sprintf('Hasar düzeltmesi (%s): %d%%', $damage, (int) round((self::DAMAGE_FACTORS[$damage] - 1) * 100));
+            }
         }
 
         $discount = null;
@@ -98,7 +128,7 @@ final class Valuator
             if ($tsb !== null) {
                 $points += 5;
             }
-            if (count($comps) >= 5) {
+            if ($appraisal['comps'] >= 5) {
                 $points += 5;
             }
             if (self::priceDropped((int) $l['id'])) {

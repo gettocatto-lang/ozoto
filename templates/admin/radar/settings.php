@@ -11,6 +11,7 @@
  * @var list<array<string, mixed>> $runs
  * @var string|null $notice
  * @var array<string, mixed>|null $probe
+ * @var array<string, int> $deal
  * @var array{token_set: bool, bot: string, code: string, chat_name: string, linked: bool, enabled: bool, min_score: int} $telegram
  */
 $sourceNames = ['eposta' => 'E-posta', 'arama' => 'Arama motoru', 'eklenti' => 'Eklenti'];
@@ -58,6 +59,19 @@ $sourceNames = ['eposta' => 'E-posta', 'arama' => 'Arama motoru', 'eklenti' => '
       <form id="tg-test" method="post" action="/yonetim/radar/telegram-test"><?= csrf_field() ?></form>
     <?php endif ?>
   </section>
+
+  <form class="form-card" method="post" action="/yonetim/radar/kar-ayarlari" id="kar">
+    <?= csrf_field() ?>
+    <h2 class="form-card-title">Kâr hesabı <small>(ilan sayfasındaki eksper analizi)</small></h2>
+    <p class="muted small">Eklenti açıkken bir ilan sayfasını açtığınızda Radar; hasarsız piyasa değerini, boya-değişen/tramer/ağır hasara göre gerçek değeri,
+      bu masraflarla elde kalacak kârı ve <strong>"en fazla şu kadar ver"</strong> fiyatını hesaplar. Rakamları kendi işinize göre ayarlayın.</p>
+    <div class="grid-2">
+      <?php foreach (\Ozoto\Radar\DealAnalyzer::SETTINGS as $key => [$label]): ?>
+        <label class="field"><span><?= e($label) ?></span><input type="text" name="<?= e($key) ?>" value="<?= e(format_number((int) $deal[$key])) ?>" inputmode="numeric"></label>
+      <?php endforeach ?>
+    </div>
+    <button class="btn btn-primary" type="submit">Kaydet ve analizleri yenile</button>
+  </form>
 
   <form class="form-card" method="post" action="/yonetim/radar/eposta" id="eposta">
     <?= csrf_field() ?>
