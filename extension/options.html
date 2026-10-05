@@ -8,8 +8,8 @@
 <body>
 <main class="wrap">
   <h1>Öz Oto Radar</h1>
-  <p class="muted">Açtığınız ilan sayfalarındaki araçları Kelepir Radar'a gönderir ve her ilanın yanında puanı gösterir.
-    Kendi kendine sayfa gezmez; satıcı adı ve telefonu gönderilmez.</p>
+  <p class="muted">Açtığınız ilan sayfalarındaki araçları Kelepir Radar'a gönderir, her ilanın yanında puanı gösterir ve
+    sayfadaki kelepirleri sağ üstteki panelde toplar. Kendi kendine sayfa gezmez; satıcı adı ve telefonu gönderilmez.</p>
   <label>Sunucu adresi
     <input id="server" type="url" placeholder="https://ozoto.online">
   </label>
@@ -17,6 +17,10 @@
     <input id="token" type="password" placeholder="Panel → Radar → Ayarlar → Tarayıcı eklentisi">
   </label>
   <label class="check"><input id="enabled" type="checkbox"> Eklenti açık</label>
+  <label class="check"><input id="panel" type="checkbox"> Sayfada kelepir paneli göster (sağ üst)</label>
+  <label>Panelde gösterilecek en düşük puan
+    <input id="panelMin" type="number" min="0" max="100" step="5">
+  </label>
   <div class="row">
     <button id="save" type="button">Kaydet</button>
     <button id="test" type="button" class="ghost">Bağlantıyı test et</button>

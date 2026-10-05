@@ -70,7 +70,9 @@ hasar, vites, yakıt, "acil", "ihale" filtreleri ve kayıtlı aramalar vardır.
   5. Sitelere bu adresle üye olurken gelen doğrulama linkleri: Radar ayarları → **Kutudaki son e-postalar** (e-postaları okundu yapmaz, silmez).
   6. Bir bildirim e-postasını `.eml` olarak indirip "Bir bildirim e-postasını dene" bölümünden yükleyerek hangi ilanların
      çıkarıldığını görebilirsin. Çıkmayan biçim olursa dosyayı Claude'a gönder.
-- **Tarayıcı eklentisi (Chrome):** ekip ilanları gezerken sayfadaki ilanları Radar'a gönderir, her ilanın yanında puan rozeti gösterir.
+- **Tarayıcı eklentisi (Chrome):** ekip ilanları gezerken sayfadaki ilanları Radar'a gönderir, her ilanın yanında puan rozeti gösterir
+  ve sağ üstteki **kelepir panelinde** o sayfanın eşik üstü ilanlarını (varsayılan 50 puan) puana göre toplar; satıra tıklayınca
+  ilana kaydırır. Eşik ve panel eklentinin Seçenekler sayfasından değiştirilir. Sayfa açmayı/sonraki sayfayı kullanıcı yapar.
   1. Panel → **Radar ayarları → 2. Tarayıcı eklentisi** → **Anahtar oluştur** → anahtarı kopyala (bir kez gösterilir).
   2. **Eklentiyi indir (zip)** → bir klasöre çıkar.
   3. Chrome → `chrome://extensions` → **Geliştirici modu** → **Paketlenmemiş öğe yükle** → klasörü seç.
