@@ -53,6 +53,14 @@ Panelde **Kelepir Radar** sekmesi: ilanlar TSB kasko değeri + km/hasar düzeltm
 Liste puana, fiyata, piyasa farkına, km'ye, yıla, tarihe göre sıralanır; marka, model, şehir, kaynak, yıl/fiyat/km aralığı,
 hasar, vites, yakıt, "acil", "ihale" filtreleri ve kayıtlı aramalar vardır.
 
+- **Telefona anlık kelepir bildirimi (Telegram):** Radar puanı eşiğin (varsayılan 60) üstünde yeni bir ilan bulunca telefona
+  araç, fiyat, piyasa değeri, fark ve ilan linkiyle mesaj atar. Yalnızca e-posta ve arama motorundan kendiliğinden gelen ilanlar,
+  şüpheli işaretliler hariç; bir turda en fazla 8 ilan tek tek, fazlası tek bir özet mesajında gelir.
+  1. Telegram'da **@BotFather** → `/newbot` → ad ve `bot` ile biten kullanıcı adı → verdiği anahtarı kopyala.
+  2. Panel → **Radar ayarları → Telefona anlık kelepir bildirimi** → anahtarı yapıştır → Kaydet.
+  3. **Telegram'da botu aç** → BAŞLAT → panelde **Bağlantıyı kontrol et** → telefona onay mesajı gelir.
+  4. **Bildirimleri aç** → Kaydet. Açıldığı andan önceki ilanlar bildirilmez. **Deneme mesajı gönder** ile görünümü dene.
+
 - **E-posta bildirimleri (ana kaynak):**
   1. Plesk → **Mail → Create Email Address**: `radar@ozoto.online`.
   2. sahibinden / arabam / letgo hesaplarında bildirim adresi olarak bunu kullan (veya bildirimleri bu adrese otomatik yönlendir).

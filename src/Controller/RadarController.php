@@ -13,6 +13,7 @@ use Ozoto\Radar\ListingParser;
 use Ozoto\Radar\Listings;
 use Ozoto\Radar\Sources\EmailNotifications;
 use Ozoto\Radar\Sources\SearchEngine;
+use Ozoto\Radar\Telegram;
 use Ozoto\Session;
 use Ozoto\Settings;
 use Ozoto\Support\Catalog;
@@ -173,6 +174,15 @@ final class RadarController
             'preview' => Session::pull('preview'),
             'diagnostics' => Diagnostics::last(),
             'probe' => Diagnostics::lastProbe(),
+            'telegram' => [
+                'token_set' => Settings::secret('tg_token') !== '',
+                'bot' => (string) Settings::get('tg_bot', ''),
+                'code' => (string) Settings::get('tg_code', ''),
+                'chat_name' => (string) Settings::get('tg_chat_name', ''),
+                'linked' => Telegram::configured(),
+                'enabled' => Settings::get('tg_enabled') === '1',
+                'min_score' => Telegram::minScore(),
+            ],
             'extension' => [
                 'configured' => (string) Settings::get('extension_token_hash', '') !== '',
                 'token' => Session::pull('extension_token'),
@@ -205,6 +215,69 @@ final class RadarController
         Settings::set('search_freshness', in_array($freshness, ['pd', 'pw', 'pm'], true) ? $freshness : 'pd');
         Session::flash('notice', 'Ayarlar kaydedildi.');
         redirect('/yonetim/radar/ayarlar');
+    }
+
+    /** Telegram bildirimi: bot anahtarı, eşik puanı, aç/kapa. */
+    public function saveTelegram(): void
+    {
+        Auth::require();
+        if (!Csrf::valid()) {
+            abort(419);
+        }
+        $messages = [];
+        $token = trim((string) ($_POST['tg_token'] ?? ''));
+        if ($token !== '') {
+            try {
+                $messages[] = 'Bot kaydedildi: @' . Telegram::saveToken($token) . '. Şimdi "Telegram\'da botu aç" ile sohbeti bağlayın.';
+            } catch (\Throwable $e) {
+                Session::flash('notice', 'Bot kaydedilemedi: ' . $e->getMessage());
+                redirect('/yonetim/radar/ayarlar#telegram');
+            }
+        }
+        Settings::set('tg_min_score', (string) max(0, min(100, (int) ($_POST['tg_min_score'] ?? Telegram::DEFAULT_MIN_SCORE))));
+        $enable = !empty($_POST['tg_enabled']);
+        if ($enable && Settings::get('tg_enabled') !== '1') {
+            // Açıldığı andan önceki ilanlar için toplu bildirim gönderilmez.
+            Settings::set('tg_since', now());
+        }
+        Settings::set('tg_enabled', $enable ? '1' : '0');
+        $messages[] = 'Telegram ayarları kaydedildi.';
+        Session::flash('notice', implode(' ', $messages));
+        redirect('/yonetim/radar/ayarlar#telegram');
+    }
+
+    public function linkTelegram(): void
+    {
+        Auth::require();
+        if (!Csrf::valid()) {
+            abort(419);
+        }
+        try {
+            Session::flash('notice', 'Telegram bağlandı: ' . Telegram::link() . '. Telefonunuza onay mesajı gitti.');
+        } catch (\Throwable $e) {
+            Session::flash('notice', 'Bağlanamadı: ' . $e->getMessage());
+        }
+        redirect('/yonetim/radar/ayarlar#telegram');
+    }
+
+    public function testTelegram(): void
+    {
+        Auth::require();
+        if (!Csrf::valid()) {
+            abort(419);
+        }
+        $sample = [
+            'id' => 0, 'brand' => 'Renault', 'model' => 'Clio 1.5 dCi Touch', 'title' => '', 'model_year' => 2019, 'km' => 85000,
+            'damage' => 'Boyasız', 'city' => 'İstanbul', 'price' => 640000, 'market_value' => 840000, 'discount_pct' => 23.8,
+            'score' => 72, 'urgent' => 1, 'is_auction' => 0, 'auction_ends_at' => null, 'url' => site_url('/'),
+        ];
+        try {
+            Telegram::send("🧪 <b>Deneme mesajı</b> — gerçek bir kelepir bildirimi böyle görünür:\n\n" . Telegram::format($sample));
+            Session::flash('notice', 'Deneme mesajı gönderildi.');
+        } catch (\Throwable $e) {
+            Session::flash('notice', 'Gönderilemedi: ' . $e->getMessage());
+        }
+        redirect('/yonetim/radar/ayarlar#telegram');
     }
 
     public function runNow(): void

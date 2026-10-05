@@ -140,3 +140,9 @@ CREATE TABLE IF NOT EXISTS radar_saved_searches (
     query_string TEXT NOT NULL,
     created_at TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS radar_alerts (
+    listing_id INTEGER NOT NULL PRIMARY KEY,
+    channel TEXT NOT NULL,
+    sent_at TEXT NOT NULL
+);

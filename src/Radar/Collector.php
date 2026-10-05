@@ -53,6 +53,15 @@ final class Collector
 
         $summary['valued'] = Listings::valuatePending(200, $deadline);
         $summary['messages'][] = 'Değerlenen: ' . $summary['valued'];
+
+        if (Telegram::enabled()) {
+            try {
+                $summary['messages'][] = 'Telegram: ' . Telegram::dispatch($deadline + 15) . ' bildirim';
+            } catch (\Throwable $e) {
+                $summary['messages'][] = 'Telegram hatası: ' . $e->getMessage();
+                error_log('Telegram: ' . $e->getMessage());
+            }
+        }
         Settings::set('last_collect_at', now());
         return $summary;
     }
