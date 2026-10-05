@@ -1,24 +1,29 @@
 <?php
 /** @var string|null $ref */
+use Ozoto\Support\Phone;
+
 $whatsapp = (string) config('site.whatsapp');
 $sitePhone = (string) config('site.phone');
 ?>
-<section class="section">
-  <div class="container narrow center">
-    <div class="success-mark"><?= icon('check', 'icon icon-xl') ?></div>
-    <h1>Başvurunuz alındı</h1>
-    <p class="lead">Teşekkür ederiz. Uzmanımız bilgilerinizi inceleyip en kısa sürede sizi arayacak.</p>
-    <?php if ($ref): ?>
-      <p class="ref-box">Başvuru numaranız <strong><?= e($ref) ?></strong></p>
-    <?php endif ?>
-    <div class="btn-row">
-      <?php if ($whatsapp !== ''): ?>
-        <a class="btn btn-whatsapp btn-lg" href="https://wa.me/<?= e($whatsapp) ?>?text=<?= rawurlencode('Merhaba, ' . ($ref ? $ref . ' numaralı ' : '') . 'başvurum hakkında yazıyorum.') ?>" rel="noopener" target="_blank"><?= icon('whatsapp') ?>WhatsApp'tan yazın</a>
+<section class="bolum tesekkur">
+  <div class="kap tesekkur-ic">
+    <div>
+      <p class="etiket">Başvuru alındı</p>
+      <h1>Teşekkürler.<br>Sizi arayacağız.</h1>
+      <p class="giris">Uzmanımız bilgilerinizi inceleyip aynı gün sizi arayacak. Telefonunuz açık olsun; bilinmeyen bir numaradan arayabiliriz.</p>
+      <?php if ($ref): ?>
+        <dl class="ref"><dt>Başvuru numarası</dt><dd><?= e($ref) ?></dd></dl>
       <?php endif ?>
-      <?php if ($sitePhone !== ''): ?>
-        <a class="btn btn-primary btn-lg" href="tel:<?= e(\Ozoto\Support\Phone::normalize($sitePhone) ?? $sitePhone) ?>"><?= icon('phone') ?>Hemen arayın</a>
-      <?php endif ?>
-      <a class="btn btn-ghost btn-lg" href="/">Ana sayfaya dön</a>
+      <div class="eylem">
+        <?php if ($whatsapp !== ''): ?>
+          <a class="btn btn-nakit" href="https://wa.me/<?= e($whatsapp) ?>?text=<?= rawurlencode('Merhaba, ' . ($ref ? $ref . ' numaralı ' : '') . 'başvurum hakkında yazıyorum.') ?>" rel="noopener" target="_blank">WhatsApp'tan yazın<?= icon('ok') ?></a>
+        <?php endif ?>
+        <?php if ($sitePhone !== ''): ?>
+          <a class="btn btn-cizgi" href="tel:<?= e(Phone::normalize($sitePhone) ?? $sitePhone) ?>">Hemen arayın</a>
+        <?php endif ?>
+        <a class="btn-metin" href="/">Ana sayfaya dön</a>
+      </div>
     </div>
+    <div class="tesekkur-muhur"><?= partial('muhur', ['id' => 'muhur-tesekkur', 'word' => 'ALINDI']) ?></div>
   </div>
 </section>

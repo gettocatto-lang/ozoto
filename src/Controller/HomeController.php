@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Ozoto\Controller;
 
-use Ozoto\Support\Catalog;
 use Ozoto\Support\Content;
 
 final class HomeController
@@ -17,10 +16,10 @@ final class HomeController
         $organization = [
             '@context' => 'https://schema.org',
             '@type' => 'Organization',
-            'name' => 'Ozoto',
+            'name' => 'Öz Oto',
             'url' => site_url('/'),
             'logo' => site_url('/assets/img/og.png'),
-            'description' => 'Acil satılık araçlara hızlı nakit teklif. Türkiye\'nin 81 ilinden başvuru.',
+            'description' => 'Acil satılık araçlara net teklif, noterde devir ve aynı gün ödeme. Türkiye\'nin 81 ilinden başvuru.',
             'areaServed' => ['@type' => 'Country', 'name' => 'Türkiye'],
         ];
         if ($phone !== '') {
@@ -28,18 +27,16 @@ final class HomeController
         }
 
         view('home', [
-            'title' => 'Acil Satılık Aracınız Anında Nakite | Hızlı Araç Alımı – Ozoto',
-            'description' => 'Aracınızı hemen satmak mı istiyorsunuz? 2 dakikada formu doldurun, uzmanımız sizi arasın ve aracınıza hızlı nakit teklif versin. Türkiye\'nin 81 ilinden başvuru.',
+            'title' => 'Acil Satılık Aracınız Anında Nakite | Aynı Gün Ödeme – Öz Oto',
+            'description' => 'Acil satılık aracınıza net teklif: kilometre, boya-değişen ve tramer kaydına göre fiyat, noterde devir, aynı gün ödeme. 2 dakikada başvurun; 81 ilden araç alıyoruz.',
             'canonical' => site_url('/'),
             'faqs' => $faqs,
-            'brands' => Catalog::brands(),
-            'years' => Catalog::years(),
             'jsonLd' => [
                 $organization,
                 [
                     '@context' => 'https://schema.org',
                     '@type' => 'WebSite',
-                    'name' => 'Ozoto',
+                    'name' => 'Öz Oto',
                     'url' => site_url('/'),
                     'inLanguage' => 'tr-TR',
                 ],
@@ -51,8 +48,8 @@ final class HomeController
     public function kvkk(): void
     {
         view('kvkk', [
-            'title' => 'KVKK Aydınlatma Metni – Ozoto',
-            'description' => 'Ozoto kişisel verilerin korunması ve işlenmesi hakkında aydınlatma metni.',
+            'title' => 'KVKK Aydınlatma Metni – Öz Oto',
+            'description' => 'Öz Oto kişisel verilerin korunması ve işlenmesi hakkında aydınlatma metni.',
             'canonical' => site_url('/kvkk'),
         ]);
     }

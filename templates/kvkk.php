@@ -1,17 +1,17 @@
 <?php
-$company = (string) config('site.company') ?: 'Ozoto (ozoto.online)';
+$company = (string) config('site.company') ?: 'Öz Oto (ozoto.online)';
 $address = (string) config('site.address');
 $email = (string) config('site.email');
 ?>
-<section class="page-head">
-  <div class="container narrow">
-    <nav class="breadcrumb" aria-label="Sayfa yolu"><a href="/">Ana sayfa</a><span aria-hidden="true">/</span><span>KVKK</span></nav>
-    <h1>Kişisel Verilerin Korunması Aydınlatma Metni</h1>
+<section class="sayfa-bas">
+  <div class="kap dar">
+    <nav class="yol" aria-label="Sayfa yolu"><a href="/">Ana sayfa</a><span aria-hidden="true">/</span><span>KVKK</span></nav>
+    <h1>Kişisel verilerin korunması aydınlatma metni</h1>
   </div>
 </section>
 
-<section class="section section-tight">
-  <div class="container narrow prose">
+<section class="metin">
+  <div class="kap dar">
     <p>6698 sayılı Kişisel Verilerin Korunması Kanunu ("KVKK") uyarınca, veri sorumlusu sıfatıyla <strong><?= e($company) ?></strong> olarak, ozoto.online üzerinden paylaştığınız kişisel verileri aşağıda açıklanan kapsamda işliyoruz.</p>
 
     <h2>1. İşlenen kişisel veriler</h2>
