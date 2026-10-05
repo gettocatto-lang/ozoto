@@ -206,8 +206,8 @@ $sourceNames = ['eposta' => 'E-posta', 'arama' => 'Arama motoru', 'eklenti' => '
 
   <section class="form-card">
     <h2 class="form-card-title">Zamanlanmış görev (Plesk)</h2>
-    <p class="muted small">Plesk → ozoto.online → <strong>Scheduled Tasks → Add Task → "Fetch a URL"</strong>, aşağıdaki adresi yapıştırın,
-      sıklığı <strong>her 5 dakika</strong> yapın (cron: <code>*/5 * * * *</code>). E-postalar her çalışmada, arama motoru yukarıdaki aralıkta çalışır.
+    <p class="muted small">Plesk → ozoto.online → <strong>Zamanlanmış Görevler → Görev Ekle → "URL getir"</strong>, aşağıdaki adresi yapıştırın,
+      sıklığı <strong>her 5 dakika</strong> yapın (Plesk Windows <code>/</code> kabul etmediği için cron: <code>0,5,10,15,20,25,30,35,40,45,50,55 * * * *</code>). E-postalar her çalışmada, arama motoru yukarıdaki aralıkta çalışır.
       Bu adres gizlidir, paylaşmayın.</p>
     <input class="code-input" type="text" readonly value="<?= e($cronUrl) ?>" aria-label="Zamanlanmış görev adresi">
     <form method="post" action="/yonetim/radar/tara">
