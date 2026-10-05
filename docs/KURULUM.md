@@ -31,14 +31,17 @@ Plesk → ozoto.online → **Databases → Add Database**:
 Tarayıcıda **https://ozoto.online/kurulum** adresini aç.
 1. Sayfanın üstündeki **Sunucu kontrolü** listesinin tamamı yeşil olmalı.
    Kırmızı "yazılabilir" satırı varsa: Plesk **File Manager** → `site\config` ve `site\storage` klasörleri →
-   **Change Permissions** → IIS uygulama havuzu kullanıcısına (Plesk'te genelde `Plesk IIS WP User` / `IWPD_...`) **Write** izni ver.
+   **Change Permissions** → **Plesk IIS User** ve **Plesk IIS WP User** için **Modify** ve **Write** izni ver
+   (yalnızca bu iki klasöre; `site` klasörünün tamamına verme).
 2. **Kurulum anahtarı:** Claude'un sohbette verdiği anahtar (bu dosyada yazmaz).
 3. Veritabanı bilgilerini, yönetici e-posta/şifresini ve sitede görünecek telefon/WhatsApp numarasını gir.
+   Telefon, WhatsApp, firma unvanı, adres ve bildirim e-postası sonradan panelde **Hesap ve site** sayfasından değiştirilebilir.
 4. **Kurulumu tamamla** → giriş sayfasına yönlendirilirsin. `/kurulum` sayfası bundan sonra kapanır.
 
 ## 6. Yönetim paneli
 **https://ozoto.online/yonetim** — gelen başvurular, fotoğraflar, durum takibi (Yeni → Arandı → Teklif verildi → Satın alındı / Olumsuz),
 iç notlar, tek tıkla arama ve WhatsApp.
+**Hesap ve site** sayfası: sitede görünen iletişim bilgileri ve yönetici şifresini değiştirme.
 
 ## 7. Google
 - [Google Search Console](https://search.google.com/search-console)'a `ozoto.online` alan adını ekle ve doğrula.
@@ -54,12 +57,12 @@ hasar, vites, yakıt, "acil", "ihale" filtreleri ve kayıtlı aramalar vardır.
   1. Plesk → **Mail → Create Email Address**: `radar@ozoto.online`.
   2. sahibinden / arabam / letgo hesaplarında bildirim adresi olarak bunu kullan (veya bildirimleri bu adrese otomatik yönlendir).
   3. Sitelerde aramaları kaydet ve **"Bildirim almak istiyorum"**u anında/sık aç. Ne kadar çok kayıtlı arama, o kadar çok ilan.
-  4. Panel → **Ayarlar → 1. E-posta bildirimleri**: sunucu `localhost`, port `143`, güvenlik "Yok", kullanıcı ve şifre →
+  4. Panel → **Radar ayarları → 1. E-posta bildirimleri**: sunucu `localhost`, port `143`, güvenlik "Yok", kullanıcı ve şifre →
      **Bağlantıyı test et** → "Otomatik okumayı aç" → Kaydet.
   5. Bir bildirim e-postasını `.eml` olarak indirip "Bir bildirim e-postasını dene" bölümünden yükleyerek hangi ilanların
      çıkarıldığını görebilirsin. Çıkmayan biçim olursa dosyayı Claude'a gönder.
 - **Tarayıcı eklentisi (Chrome):** ekip ilanları gezerken sayfadaki ilanları Radar'a gönderir, her ilanın yanında puan rozeti gösterir.
-  1. Panel → **Ayarlar → 2. Tarayıcı eklentisi** → **Anahtar oluştur** → anahtarı kopyala (bir kez gösterilir).
+  1. Panel → **Radar ayarları → 2. Tarayıcı eklentisi** → **Anahtar oluştur** → anahtarı kopyala (bir kez gösterilir).
   2. **Eklentiyi indir (zip)** → bir klasöre çıkar.
   3. Chrome → `chrome://extensions` → **Geliştirici modu** → **Paketlenmemiş öğe yükle** → klasörü seç.
   4. Eklenti **Seçenekler**: sunucu `https://ozoto.online`, anahtar → **Bağlantıyı test et**.
@@ -69,7 +72,7 @@ hasar, vites, yakıt, "acil", "ihale" filtreleri ve kayıtlı aramalar vardır.
 - **Otomatik tarama (arama motoru):**
   1. [api-dashboard.search.brave.com](https://api-dashboard.search.brave.com/) adresinde hesap aç, **Search** planını seç
      (ayda yaklaşık 1.000 sorgu ücretsiz kredi, sonrası 1.000 sorgu başına 5 $), API anahtarını kopyala.
-  2. Panel → **Ayarlar** → anahtarı yapıştır, "Otomatik taramayı aç"ı işaretle, kaydet.
+  2. Panel → **Radar ayarları** → anahtarı yapıştır, "Otomatik taramayı aç"ı işaretle, kaydet.
   3. Ayarlar sayfasındaki **zamanlanmış görev adresini** kopyala. Plesk → ozoto.online → **Scheduled Tasks → Add Task →
      Fetch a URL** → adresi yapıştır → sıklık **her 5 dakika** (`*/5 * * * *`) → kaydet. E-postalar her çalışmada,
      arama motoru ayarlardaki aralıkta (varsayılan 180 dk) çalışır.

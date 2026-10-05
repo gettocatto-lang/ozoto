@@ -25,7 +25,8 @@ $user ??= null;
       <nav class="admin-nav" aria-label="Yönetim menüsü">
         <a href="/yonetim"<?= $current === '/yonetim' || str_starts_with($current, '/yonetim/basvuru') ? ' aria-current="page"' : '' ?>>Başvurular</a>
         <a href="/yonetim/radar"<?= str_starts_with($current, '/yonetim/radar') && $current !== '/yonetim/radar/ayarlar' ? ' aria-current="page"' : '' ?>>Kelepir Radar</a>
-        <a href="/yonetim/radar/ayarlar"<?= $current === '/yonetim/radar/ayarlar' ? ' aria-current="page"' : '' ?>>Ayarlar</a>
+        <a href="/yonetim/radar/ayarlar"<?= $current === '/yonetim/radar/ayarlar' ? ' aria-current="page"' : '' ?>>Radar ayarları</a>
+        <a href="/yonetim/hesap"<?= $current === '/yonetim/hesap' ? ' aria-current="page"' : '' ?>>Hesap ve site</a>
       </nav>
       <div class="admin-user">
         <span class="admin-email"><?= e($user['email']) ?></span>

@@ -28,7 +28,8 @@ extension/   Chrome eklentisi (Öz Oto Radar): açık ilan sayfalarını Radar'a
 | `/kvkk` | KVKK aydınlatma metni |
 | `/yonetim` | Başvuru yönetim paneli |
 | `/yonetim/radar` | Kelepir Radar: değerlenmiş ilan listesi, filtre, sıralama, kayıtlı aramalar |
-| `/yonetim/radar/ayarlar` | Arama motoru taraması ve zamanlanmış görev adresi |
+| `/yonetim/radar/ayarlar` | Radar kaynakları (e-posta, eklenti, arama motoru, kamu ihaleleri testi ve sayfa incelemesi), zamanlanmış görev adresi |
+| `/yonetim/hesap` | Sitede görünen iletişim bilgileri ve yönetici şifresi |
 | `/cron/radar?anahtar=…` | Zamanlanmış görev (Plesk "URL getir") |
 | `/api/radar/eklenti` | Tarayıcı eklentisi API'si (eklenti anahtarıyla) |
 | `/kurulum` | Tek seferlik kurulum sihirbazı |

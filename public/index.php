@@ -13,6 +13,7 @@ if (PHP_SAPI === 'cli-server') {
 require dirname(__DIR__) . '/src/bootstrap.php';
 
 use Ozoto\App;
+use Ozoto\Controller\AccountController;
 use Ozoto\Controller\AdminController;
 use Ozoto\Controller\ApplicationController;
 use Ozoto\Controller\CronController;
@@ -48,6 +49,9 @@ $router->post('/yonetim/cikis', [AdminController::class, 'logout']);
 $router->get('/yonetim/basvuru/{id}', [AdminController::class, 'show']);
 $router->post('/yonetim/basvuru/{id}', [AdminController::class, 'update']);
 $router->get('/yonetim/foto/{id}', [AdminController::class, 'photo']);
+$router->get('/yonetim/hesap', [AccountController::class, 'show']);
+$router->post('/yonetim/hesap/site', [AccountController::class, 'saveSite']);
+$router->post('/yonetim/hesap/sifre', [AccountController::class, 'changePassword']);
 
 $router->get('/yonetim/radar', [RadarController::class, 'index']);
 $router->get('/yonetim/radar/ekle', [RadarController::class, 'create']);
@@ -60,6 +64,7 @@ $router->post('/yonetim/radar/eposta-test', [RadarController::class, 'testMail']
 $router->post('/yonetim/radar/eposta-onizle', [RadarController::class, 'previewMail']);
 $router->post('/yonetim/radar/eklenti-anahtar', [RadarController::class, 'extensionToken']);
 $router->post('/yonetim/radar/kaynak-testi', [RadarController::class, 'diagnose']);
+$router->post('/yonetim/radar/kaynak-incele', [RadarController::class, 'probe']);
 $router->get('/yonetim/radar/eklenti.zip', [RadarController::class, 'extensionDownload']);
 $router->get('/api/radar/eklenti/durum', [ExtensionController::class, 'status']);
 $router->post('/api/radar/eklenti', [ExtensionController::class, 'ingest']);

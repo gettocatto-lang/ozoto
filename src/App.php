@@ -6,6 +6,9 @@ namespace Ozoto;
 
 final class App
 {
+    /** Panelin "Hesap ve site" sayfasından değiştirilebilen ayarlar; settings tablosunda "config.<anahtar>" adıyla durur. */
+    public const PANEL_KEYS = ['site.phone', 'site.whatsapp', 'site.email', 'site.company', 'site.address', 'notify_email'];
+
     /** @var array<string, mixed> */
     private static array $config = [];
 
@@ -48,6 +51,36 @@ final class App
                 echo 'Bir hata oluştu. Lütfen daha sonra tekrar deneyin.';
             }
         });
+
+        if ($installed) {
+            self::applyPanelSettings();
+        }
+    }
+
+    /** Panelden kaydedilen site bilgileri config/local.php'deki kurulum değerlerinin önüne geçer. */
+    private static function applyPanelSettings(): void
+    {
+        try {
+            foreach (self::PANEL_KEYS as $key) {
+                $value = Settings::get('config.' . $key);
+                if ($value === null) {
+                    continue;
+                }
+                $parts = explode('.', $key);
+                $last = array_pop($parts);
+                $node = &self::$config;
+                foreach ($parts as $part) {
+                    if (!isset($node[$part]) || !is_array($node[$part])) {
+                        $node[$part] = [];
+                    }
+                    $node = &$node[$part];
+                }
+                $node[$last] = $value;
+                unset($node);
+            }
+        } catch (\Throwable $e) {
+            error_log('Panel ayarları okunamadı: ' . $e->getMessage());
+        }
     }
 
     public static function config(string $key, mixed $default = null): mixed
