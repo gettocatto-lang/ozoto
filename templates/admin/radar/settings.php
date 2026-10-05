@@ -11,12 +11,53 @@
  * @var list<array<string, mixed>> $runs
  * @var string|null $notice
  * @var array<string, mixed>|null $probe
+ * @var array{token_set: bool, bot: string, code: string, chat_name: string, linked: bool, enabled: bool, min_score: int} $telegram
  */
 $sourceNames = ['eposta' => 'E-posta', 'arama' => 'Arama motoru', 'eklenti' => 'Eklenti'];
 ?>
 <div class="container narrow-admin">
   <h1>Radar ayarları</h1>
   <?php if ($notice): ?><div class="alert alert-success" role="status"><?= e($notice) ?></div><?php endif ?>
+
+  <section class="form-card" id="telegram">
+    <h2 class="form-card-title">Telefona anlık kelepir bildirimi <small>(Telegram)</small></h2>
+    <p class="muted small">Radar puanı eşiğin üstünde yeni bir ilan bulduğu anda telefonunuza mesaj atar: araç, fiyat, piyasa değeri, fark ve ilan linki.
+      Yalnızca e-posta ve arama motorundan kendiliğinden gelen ilanlar bildirilir; şüpheli işaretli ilanlar gönderilmez.</p>
+    <?php if (!$telegram['token_set']): ?>
+      <div class="howto">
+        <ol>
+          <li>Telegram'da <strong>@BotFather</strong>'ı açın, <code>/newbot</code> yazın.</li>
+          <li>Bota bir ad verin (ör. <em>Öz Oto Radar</em>), sonra <code>bot</code> ile biten bir kullanıcı adı (ör. <em>ozoto_radar_bot</em>).</li>
+          <li>BotFather'ın verdiği <strong>anahtarı</strong> (<code>123456789:AA...</code>) aşağıya yapıştırıp kaydedin.</li>
+        </ol>
+      </div>
+    <?php endif ?>
+    <form method="post" action="/yonetim/radar/telegram">
+      <?= csrf_field() ?>
+      <div class="grid-2">
+        <label class="field"><span>Bot anahtarı <?= $telegram['token_set'] ? '(kayıtlı' . ($telegram['bot'] !== '' ? ': @' . e($telegram['bot']) : '') . ' — değiştirmek için yazın)' : '' ?></span>
+          <input type="password" name="tg_token" autocomplete="off" placeholder="<?= $telegram['token_set'] ? '••••••••' : '123456789:AA...' ?>"></label>
+        <label class="field"><span>En düşük puan (bu puan ve üstü bildirilir)</span>
+          <input type="number" name="tg_min_score" min="0" max="100" value="<?= (int) $telegram['min_score'] ?>"></label>
+      </div>
+      <label class="check"><input type="checkbox" name="tg_enabled" value="1"<?= $telegram['enabled'] ? ' checked' : '' ?>><span>Bildirimleri aç</span></label>
+      <button class="btn btn-primary" type="submit">Kaydet</button>
+    </form>
+    <?php if ($telegram['token_set'] && $telegram['bot'] !== ''): ?>
+      <div class="btn-row-left tg-link">
+        <?php if ($telegram['linked']): ?>
+          <p class="small">Bağlı sohbet: <strong><?= e($telegram['chat_name'] ?: 'Telegram') ?></strong>. Başka bir telefona veya gruba taşımak için:</p>
+        <?php else: ?>
+          <p class="small"><strong>Son adım:</strong> aşağıdaki butonla botu telefonunuzda açın, <strong>BAŞLAT</strong>'a dokunun, sonra "Bağlantıyı kontrol et"e basın.</p>
+        <?php endif ?>
+        <a class="btn btn-ghost" href="https://t.me/<?= e(rawurlencode($telegram['bot'])) ?>?start=<?= e(rawurlencode($telegram['code'])) ?>" target="_blank" rel="noopener noreferrer">Telegram'da botu aç</a>
+        <button class="btn btn-ghost" type="submit" form="tg-link">Bağlantıyı kontrol et</button>
+        <?php if ($telegram['linked']): ?><button class="btn btn-ghost" type="submit" form="tg-test">Deneme mesajı gönder</button><?php endif ?>
+      </div>
+      <form id="tg-link" method="post" action="/yonetim/radar/telegram-bagla"><?= csrf_field() ?></form>
+      <form id="tg-test" method="post" action="/yonetim/radar/telegram-test"><?= csrf_field() ?></form>
+    <?php endif ?>
+  </section>
 
   <form class="form-card" method="post" action="/yonetim/radar/eposta" id="eposta">
     <?= csrf_field() ?>
