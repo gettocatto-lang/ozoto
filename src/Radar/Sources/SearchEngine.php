@@ -19,13 +19,18 @@ final class SearchEngine
     public const NAME = 'arama';
     public const ENDPOINT = 'https://api.search.brave.com/res/v1/web/search';
 
+    /**
+     * Ölçüm (Ekim 2026): Brave'in dizininde son 24 saatin ilanları yalnızca arabam'da var (günde ~10 ilan, fiyatsız);
+     * sahibinden ilanları eski, letgo hiç yok. Model adı sorguları sayfa altındaki marka listesi yüzünden hedeflenemiyor;
+     * şehir adı başlıkta geçtiği için işe yarıyor. Bu yüzden varsayılan birkaç geniş arabam sorgusudur.
+     */
     public const DEFAULT_QUERIES = <<<TXT
-        site:sahibinden.com/ilan otomobil acil satılık
-        site:sahibinden.com/ilan otomobil ihtiyaçtan satılık
-        site:arabam.com/ilan acil satılık
-        site:arabam.com/ilan sahibinden ihtiyaçtan
-        site:letgo.com araba acil satılık
-        site:facebook.com/marketplace/item araba acil satılık
+        site:arabam.com/ilan sahibinden
+        site:arabam.com/ilan acil
+        site:arabam.com/ilan hasarlı
+        site:arabam.com/ilan İstanbul sahibinden
+        site:arabam.com/ilan Ankara sahibinden
+        site:arabam.com/ilan İzmir sahibinden
         TXT;
 
     /** Türkiye ikinci el pazarında en çok alınıp satılan modeller: otomatik sorgular bunlar için üretilir. */
@@ -60,9 +65,10 @@ final class SearchEngine
         return array_values(array_unique($queries));
     }
 
+    /** Model × ifade sorguları: Brave'de düşük verimli olduğu için varsayılan kapalı. */
     public static function autoEnabled(): bool
     {
-        return Settings::get('search_auto') !== '0';
+        return Settings::get('search_auto') === '1';
     }
 
     /**
@@ -177,10 +183,27 @@ final class SearchEngine
      */
     public static function toListing(array $item): array
     {
-        $snippets = [(string) ($item['description'] ?? '')];
-        foreach ((array) ($item['extra_snippets'] ?? []) as $extra) {
-            $snippets[] = (string) $extra;
+        $snippets = [];
+        foreach ([(string) ($item['description'] ?? ''), ...array_map('strval', (array) ($item['extra_snippets'] ?? []))] as $snippet) {
+            if (!self::isBoilerplate($snippet)) {
+                $snippets[] = $snippet;
+            }
         }
-        return ListingParser::toListing((string) $item['url'], (string) ($item['title'] ?? ''), implode(' ', $snippets));
+        // Başlıktaki " - 44607180 | arabam.com" eki ilan bilgisi değil.
+        $title = (string) preg_replace('/\s*[-|]\s*\d{6,}\s*\|.*$|\s*\|\s*[a-z0-9.-]+\.(com|net|org)(\.tr)?\s*$/iu', '', (string) ($item['title'] ?? ''));
+        return ListingParser::toListing((string) $item['url'], $title, implode(' ', $snippets));
+    }
+
+    /** Sayfa altındaki "Sahibinden Volkswagen Passat Sahibinden Renault Clio…" gibi marka/model listeleri. */
+    public static function isBoilerplate(string $snippet): bool
+    {
+        $folded = \Ozoto\Support\Text::fold($snippet);
+        $brands = 0;
+        foreach (['volkswagen', 'renault', 'fiat', 'toyota', 'ford', 'opel', 'hyundai', 'peugeot', 'honda', 'bmw', 'mercedes', 'audi', 'dacia', 'nissan', 'skoda', 'seat', 'citroen', 'kia'] as $brand) {
+            if (str_contains($folded, $brand)) {
+                $brands++;
+            }
+        }
+        return $brands >= 5 || substr_count($folded, 'fiyat listesi') >= 2 || substr_count($folded, 'ikinci el') >= 3;
     }
 }

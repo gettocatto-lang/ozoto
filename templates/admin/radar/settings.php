@@ -195,6 +195,9 @@ $sourceNames = ['eposta' => 'E-posta', 'arama' => 'Arama motoru', 'eklenti' => '
     </label>
     <?php if ($apiKeySet): ?><label class="check"><input type="checkbox" name="search_api_key_clear" value="1"><span>Kayıtlı anahtarı sil</span></label><?php endif ?>
     <label class="check"><input type="checkbox" name="search_enabled" value="1"<?= $enabled ? ' checked' : '' ?>><span>Otomatik taramayı aç</span></label>
+    <p class="small muted"><strong>Ölçüm:</strong> Brave'in dizininde son 24 saatin ilanları yalnızca arabam'da var (günde ~10 ilan) ve özetlerde fiyat yok;
+      bu ilanlar listede "fiyat bilinmiyor" görünür, eklentiyle açınca eksper analizi tamamlanır. sahibinden ilanları dizinde eski, letgo hiç yok.
+      Birkaç geniş sorgu ve düşük bütçe yeterli; model sorguları çoğunlukla aynı ilanları getirir.</p>
     <label class="check"><input type="checkbox" name="search_auto" value="1"<?= $search['auto'] ? ' checked' : '' ?>>
       <span>Popüler modeller için otomatik sorgular (<?= count(\Ozoto\Radar\Sources\SearchEngine::MODELS) ?> model × "acil / ihtiyaçtan / hasarlı / sahibinden acil / nakit ihtiyacından" × sahibinden, arabam, letgo = <?= (int) $search['generated'] ?> sorgu, sırayla döner)</span></label>
     <label class="field">
