@@ -12,6 +12,7 @@ use Ozoto\Radar\DealAnalyzer;
 use Ozoto\Radar\Details;
 use Ozoto\Radar\Diagnostics;
 use Ozoto\Radar\ListingParser;
+use Ozoto\Radar\QuickLinks;
 use Ozoto\Radar\Listings;
 use Ozoto\Radar\Sources\EmailNotifications;
 use Ozoto\Radar\Sources\SearchEngine;
@@ -385,6 +386,23 @@ final class RadarController
         }
         Session::flash('notice', $message);
         redirect('/yonetim/radar/ayarlar#eposta');
+    }
+
+    /** Popüler modeller için sahibinden/arabam'a hazır arama linkleri (en ucuz, son 24 saat, 50 ilan). */
+    public function links(): void
+    {
+        $user = Auth::require();
+        $city = (string) ($_GET['sehir'] ?? '');
+        if (!in_array($city, Catalog::cities(), true)) {
+            $city = '';
+        }
+        view('admin/radar/links', [
+            'title' => 'Kelepir linkleri – Öz Oto Yönetim',
+            'user' => $user,
+            'rows' => QuickLinks::all($city),
+            'city' => $city,
+            'cities' => Catalog::cities(),
+        ], 'admin/layout');
     }
 
     /** Radar posta kutusundaki son e-postalar: üyelik doğrulama linkleri ve gelen bildirimlerin biçimi. */
