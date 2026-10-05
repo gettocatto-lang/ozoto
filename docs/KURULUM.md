@@ -88,7 +88,8 @@ hasar, vites, yakıt, "acil", "ihale" filtreleri ve kayıtlı aramalar vardır.
 - **Elle ekleme:** Radar → **+ İlan ekle** → ilan linkini yapıştır, fiyat ve km'yi gir. Marka/model/yıl linkten bulunur.
 - **Otomatik tarama (arama motoru):**
   1. [api-dashboard.search.brave.com](https://api-dashboard.search.brave.com/) adresinde hesap aç, **Search** planını seç
-     (ayda yaklaşık 1.000 sorgu ücretsiz kredi, sonrası 1.000 sorgu başına 5 $), API anahtarını kopyala.
+     (ücretli, kullandıkça: yaklaşık 1.000 sorgu = 5 $; ücretsiz kota yok), API anahtarını kopyala.
+     Paneldeki **aylık sorgu bütçesi** harcamayı sınırlar (1.000 sorgu ≈ ayda 5 $).
   2. Panel → **Radar ayarları** → anahtarı yapıştır, "Otomatik taramayı aç"ı işaretle, kaydet.
   3. Ayarlar sayfasındaki **zamanlanmış görev adresini** kopyala. Plesk → ozoto.online → **Scheduled Tasks → Add Task →
      Fetch a URL** → adresi yapıştır → sıklık **her 5 dakika** (Plesk Windows `/` kabul etmez: `0,5,10,15,20,25,30,35,40,45,50,55 * * * *`) → kaydet. E-postalar her çalışmada,

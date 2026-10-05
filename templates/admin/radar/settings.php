@@ -187,7 +187,7 @@ $sourceNames = ['eposta' => 'E-posta', 'arama' => 'Arama motoru', 'eklenti' => '
     <p class="muted small">
       Brave Search'ün resmî API'si ile arama motorunun dizinindeki ilan linkleri alınır. Dizine giren ilanlar sınırlı ve gecikmelidir;
       e-posta bildirimlerinin yerini tutmaz. Anahtar: <a href="https://api-dashboard.search.brave.com/" target="_blank" rel="noopener noreferrer">api-dashboard.search.brave.com</a>
-      → "Search" planı. Ücretsiz başlangıç kotası ve kullandıkça ödeme var; güncel fiyatı sitede kontrol edin.
+      → "Search" planı. Ücretli, kullandıkça ödenir (yaklaşık 1.000 sorgu = 5 $); harcama aşağıdaki aylık bütçeyle sınırlanır.
     </p>
     <label class="field">
       <span>API anahtarı <?= $apiKeySet ? '(kayıtlı — değiştirmek için yenisini yazın)' : '' ?></span>
