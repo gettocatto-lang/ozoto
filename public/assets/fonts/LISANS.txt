@@ -1,0 +1,7 @@
+Bu klasördeki yazı tipleri SIL Open Font License 1.1 ile lisanslıdır (https://openfontlicense.org).
+Dosyalar, sitede kullanılan karakterlerle (Latin + Türkçe, ₺) sınırlı alt kümelerdir.
+
+archivo.woff2          Archivo (değişken: kalınlık 300–700, genişlik %100–125)
+                       Copyright 2020 The Archivo Project Authors (https://github.com/Omnibus-Type/Archivo)
+instrument-sans.woff2  Instrument Sans (değişken: kalınlık 400–600)
+                       Copyright 2022 The Instrument Sans Project Authors (https://github.com/Instrument/instrument-sans)

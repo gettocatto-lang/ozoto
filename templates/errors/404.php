@@ -1,11 +1,11 @@
-<section class="section">
-  <div class="container narrow center">
-    <p class="error-code">404</p>
-    <h1>Aradığınız sayfa bulunamadı</h1>
-    <p class="lead">Sayfa taşınmış veya hiç var olmamış olabilir.</p>
-    <div class="btn-row">
-      <a class="btn btn-accent btn-lg" href="/aracimi-hemen-sat">Teklif Al</a>
-      <a class="btn btn-ghost btn-lg" href="/">Ana sayfa</a>
+<section class="bolum hata-sayfa">
+  <div class="kap dar">
+    <span class="hata-kod" aria-hidden="true">404</span>
+    <h1>Bu sayfa bulunamadı.</h1>
+    <p class="giris">Sayfa taşınmış ya da hiç var olmamış olabilir.</p>
+    <div class="eylem">
+      <a class="btn btn-nakit" href="/aracimi-hemen-sat">Teklif al<?= icon('ok') ?></a>
+      <a class="btn-metin" href="/">Ana sayfaya dön</a>
     </div>
   </div>
 </section>

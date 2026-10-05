@@ -76,7 +76,7 @@ final class ApplicationController
     public function thanks(): void
     {
         view('thanks', [
-            'title' => 'Başvurunuz alındı – Ozoto',
+            'title' => 'Başvurunuz alındı – Öz Oto',
             'noindex' => true,
             'ref' => Session::pull('ref'),
         ]);
@@ -267,7 +267,7 @@ final class ApplicationController
     private function renderForm(array $old, array $errors, int $status = 200): void
     {
         view('apply', [
-            'title' => 'Aracımı Hemen Sat – Ücretsiz Nakit Teklif Al | Ozoto',
+            'title' => 'Aracımı Hemen Sat – Ücretsiz Nakit Teklif | Öz Oto',
             'description' => 'Acil satılık aracınız için 2 dakikada başvurun. Uzmanımız sizi arasın, aracınıza hızlı nakit teklif versin. Hasarlı ve yüksek kilometreli araçlar dahil.',
             'canonical' => site_url('/aracimi-hemen-sat'),
             'old' => array_map(static fn ($v) => is_string($v) ? $v : '', $old),
@@ -285,7 +285,7 @@ final class ApplicationController
                 '@type' => 'BreadcrumbList',
                 'itemListElement' => [
                     ['@type' => 'ListItem', 'position' => 1, 'name' => 'Ana sayfa', 'item' => site_url('/')],
-                    ['@type' => 'ListItem', 'position' => 2, 'name' => 'Aracımı hemen sat', 'item' => site_url('/aracimi-hemen-sat')],
+                    ['@type' => 'ListItem', 'position' => 2, 'name' => 'Teklif formu', 'item' => site_url('/aracimi-hemen-sat')],
                 ],
             ]],
         ], 'layout', $status);
