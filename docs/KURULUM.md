@@ -59,7 +59,8 @@ hasar, vites, yakıt, "acil", "ihale" filtreleri ve kayıtlı aramalar vardır.
   3. Sitelerde aramaları kaydet ve **"Bildirim almak istiyorum"**u anında/sık aç. Ne kadar çok kayıtlı arama, o kadar çok ilan.
   4. Panel → **Radar ayarları → 1. E-posta bildirimleri**: sunucu `localhost`, port `143`, güvenlik "Yok", kullanıcı ve şifre →
      **Bağlantıyı test et** → "Otomatik okumayı aç" → Kaydet.
-  5. Bir bildirim e-postasını `.eml` olarak indirip "Bir bildirim e-postasını dene" bölümünden yükleyerek hangi ilanların
+  5. Sitelere bu adresle üye olurken gelen doğrulama linkleri: Radar ayarları → **Kutudaki son e-postalar** (e-postaları okundu yapmaz, silmez).
+  6. Bir bildirim e-postasını `.eml` olarak indirip "Bir bildirim e-postasını dene" bölümünden yükleyerek hangi ilanların
      çıkarıldığını görebilirsin. Çıkmayan biçim olursa dosyayı Claude'a gönder.
 - **Tarayıcı eklentisi (Chrome):** ekip ilanları gezerken sayfadaki ilanları Radar'a gönderir, her ilanın yanında puan rozeti gösterir.
   1. Panel → **Radar ayarları → 2. Tarayıcı eklentisi** → **Anahtar oluştur** → anahtarı kopyala (bir kez gösterilir).

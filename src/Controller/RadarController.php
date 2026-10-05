@@ -283,6 +283,31 @@ final class RadarController
         redirect('/yonetim/radar/ayarlar#eposta');
     }
 
+    /** Radar posta kutusundaki son e-postalar: üyelik doğrulama linkleri ve gelen bildirimlerin biçimi. */
+    public function mailbox(): void
+    {
+        $user = Auth::require();
+        @set_time_limit(60);
+        $messages = [];
+        $error = null;
+        if (!EmailNotifications::configured()) {
+            $error = 'Önce Radar ayarlarından posta kutusunu bağlayın.';
+        } else {
+            try {
+                $messages = EmailNotifications::recent(10);
+            } catch (\Throwable $e) {
+                $error = 'Posta kutusu okunamadı: ' . $e->getMessage();
+            }
+        }
+        view('admin/radar/mailbox', [
+            'title' => 'Radar posta kutusu – Öz Oto Yönetim',
+            'user' => $user,
+            'messages' => $messages,
+            'error' => $error,
+            'mailUser' => (string) Settings::get('mail_user'),
+        ], 'admin/layout');
+    }
+
     /** Kamu ihale kaynaklarına bu sunucudan erişilebiliyor mu? (Toplayıcılar buna göre yazılacak.) */
     public function diagnose(): void
     {
