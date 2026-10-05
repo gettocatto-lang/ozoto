@@ -146,3 +146,11 @@ CREATE TABLE IF NOT EXISTS radar_alerts (
     channel TEXT NOT NULL,
     sent_at TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS radar_details (
+    listing_id INTEGER NOT NULL PRIMARY KEY,
+    data TEXT NOT NULL,
+    analysis TEXT NULL,
+    raw TEXT NULL,
+    updated_at TEXT NOT NULL
+);

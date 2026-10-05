@@ -70,6 +70,12 @@ hasar, vites, yakıt, "acil", "ihale" filtreleri ve kayıtlı aramalar vardır.
   5. Sitelere bu adresle üye olurken gelen doğrulama linkleri: Radar ayarları → **Kutudaki son e-postalar** (e-postaları okundu yapmaz, silmez).
   6. Bir bildirim e-postasını `.eml` olarak indirip "Bir bildirim e-postasını dene" bölümünden yükleyerek hangi ilanların
      çıkarıldığını görebilirsin. Çıkmayan biçim olursa dosyayı Claude'a gönder.
+- **Eksper analizi (ilan sayfası):** eklenti açıkken bir ilanı açınca sağda bir kart çıkar: **AL / PAZARLIK / GEÇ** kararı,
+  hasarsız piyasa değeri (TSB + benzer ilanlar, km düzeltmeli), parça parça boya/değişen + tramer + ağır hasara göre gerçek değer,
+  masraflar düşülünce kâr, **"en fazla şu kadar ver"** fiyatı, açıklamadaki riskler (motor/şanzıman arızası, airbag, şase/podye,
+  kapora/kargo dolandırıcılığı, haciz, km düşüklüğü…) ve artılar, ekspertizde/satıcıya sorulacaklar ve yorum. Aynı analiz panelde
+  ilanın sayfasında da görünür. Masraf ve hedef kâr rakamları: **Radar ayarları → Kâr hesabı**. Satıcı adı/telefonu okunmaz.
+  Hasar oranları başlangıç değerleridir (`src/Radar/DamageModel.php`); gerçek alım-satımlarla karşılaştırıp ayarlanmalı.
 - **Tarayıcı eklentisi (Chrome):** ekip ilanları gezerken sayfadaki ilanları Radar'a gönderir, her ilanın yanında puan rozeti gösterir
   ve sağ üstteki **kelepir panelinde** o sayfanın eşik üstü ilanlarını (varsayılan 50 puan) puana göre toplar; satıra tıklayınca
   ilana kaydırır. Eşik ve panel eklentinin Seçenekler sayfasından değiştirilir. Sayfa açmayı/sonraki sayfayı kullanıcı yapar.

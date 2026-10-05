@@ -29,6 +29,7 @@ extension/   Chrome eklentisi (Öz Oto Radar): açık ilan sayfalarını Radar'a
 | `/yonetim` | Başvuru yönetim paneli |
 | `/yonetim/radar` | Kelepir Radar: değerlenmiş ilan listesi, filtre, sıralama, kayıtlı aramalar |
 | `/yonetim/radar/ayarlar` | Radar kaynakları (e-posta, eklenti, arama motoru, kamu ihaleleri testi ve sayfa incelemesi), zamanlanmış görev adresi |
+| `/api/radar/eklenti/detay` | Eklentiden ilan detay sayfası: araç bilgileri, boya-değişen, tramer, açıklama → AL / PAZARLIK / GEÇ analizi |
 | `/yonetim/hesap` | Sitede görünen iletişim bilgileri ve yönetici şifresi |
 | `/cron/radar?anahtar=…` | Zamanlanmış görev (Plesk "URL getir") |
 | `/api/radar/eklenti` | Tarayıcı eklentisi API'si (eklenti anahtarıyla) |

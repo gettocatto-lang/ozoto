@@ -177,7 +177,7 @@ final class ListingParser
         $price = null;
         if (preg_match('/(\d+(?:[.,]\d+)?)\s*milyon/u', $folded, $m) === 1) {
             $price = (int) round((float) str_replace(',', '.', $m[1]) * 1_000_000);
-        } elseif (preg_match('/(\d{1,3}(?:[.\s]\d{3})+|\d{4,9})\s*(?:tl|try|₺)(?![a-z])/u', $folded, $m) === 1) {
+        } elseif (preg_match('/(?<![\d.,])(\d{1,3}(?:\.\d{3})+|\d{1,3}(?:\s\d{3})+|\d{4,9})\s*(?:tl|try|₺)(?![a-z])/u', $folded, $m) === 1) {
             $price = Text::amount($m[1]);
         }
         if ($price !== null && ($price < 10_000 || $price > 500_000_000)) {
@@ -349,10 +349,24 @@ final class ListingParser
         };
     }
 
+    /** "ağır hasar kayıtlı" geçiyor ve ardından "hayır/yok/değil" gelmiyor. */
+    private static function heavyDamage(string $folded): bool
+    {
+        if (preg_match_all('/agir hasar\w*((?:\s+\S+){0,2})/u', $folded, $mm) < 1) {
+            return false;
+        }
+        foreach ($mm[1] as $after) {
+            if (preg_match('/\b(hayir|yok|yoktur|degil|degildir|bulunmamaktadir)\b/u', $after) !== 1) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private static function detectDamage(string $folded): ?string
     {
         return match (true) {
-            preg_match('/agir hasar/u', $folded) === 1 => 'Ağır hasar kayıtlı',
+            self::heavyDamage($folded) => 'Ağır hasar kayıtlı',
             preg_match('/\b(hatasiz|boyasiz ve degisensiz|boyasiz degisensiz)\b/u', $folded) === 1 => 'Hatasız / boyasız',
             preg_match('/\bdegisen(li)?\b/u', $folded) === 1 && preg_match('/\bboyali\b/u', $folded) === 1 => 'Boyalı ve değişenli',
             preg_match('/\bdegisen(li)?\b/u', $folded) === 1 => 'Değişenli',

@@ -442,3 +442,25 @@ fieldset.field > legend + * { clear: both; }
 code { font: .88em ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: var(--bg-alt); padding: 1px 5px; border-radius: 4px; }
 .history .good { color: var(--ok); font-weight: 600; }
 .history .bad { color: var(--danger); font-weight: 600; }
+
+/* Eksper analizi (ilan detayı) */
+.analysis-head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+.analysis-head p { margin: 2px 0 0; }
+.verdict { flex: none; display: inline-block; padding: 4px 12px; border-radius: 999px; font-weight: 800; font-size: .85rem; letter-spacing: .02em; }
+.verdict-al { background: #22c55e; color: #052e16; }
+.verdict-pazarlik { background: #fcd34d; color: #3b2a00; }
+.verdict-gec { background: #ef4444; color: #fff; }
+.verdict-eksik { background: #e2e8f0; color: #334155; }
+.verdict-risky { box-shadow: 0 0 0 3px #fecaca; }
+.analysis-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 28px; }
+.analysis-wide { grid-column: 1 / -1; }
+.analysis-block h3 { font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 14px 0 6px; }
+.analysis-block p { margin: 0 0 8px; }
+.kv { width: 100%; border-collapse: collapse; font-size: .92rem; }
+.kv td { padding: 4px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+.kv td:last-child { text-align: right; font-weight: 600; padding-left: 12px; }
+.levels { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: .92rem; }
+.levels .lvl-red { color: var(--danger); font-weight: 600; }
+.levels .lvl-amber { color: #92400e; }
+.levels .lvl-green { color: var(--ok); }
+@media (max-width: 720px) { .analysis-grid { grid-template-columns: 1fr; } }

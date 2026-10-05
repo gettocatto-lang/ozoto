@@ -150,6 +150,18 @@ final class Listings
     }
 
     /** @return array<string, mixed>|null */
+    public static function findByUrl(string $url): ?array
+    {
+        if (!ListingParser::isWebUrl($url)) {
+            return null;
+        }
+        $stmt = Database::connection()->prepare('SELECT * FROM radar_listings WHERE url_hash = ?');
+        $stmt->execute([ListingParser::urlHash($url)]);
+        $row = $stmt->fetch();
+        return $row ?: null;
+    }
+
+    /** @return array<string, mixed>|null */
     public static function find(int $id): ?array
     {
         $stmt = Database::connection()->prepare('SELECT * FROM radar_listings WHERE id = ?');
@@ -162,15 +174,52 @@ final class Listings
     {
         $pdo = Database::connection();
         $pdo->prepare('DELETE FROM radar_price_history WHERE listing_id = ?')->execute([$id]);
+        $pdo->prepare('DELETE FROM radar_details WHERE listing_id = ?')->execute([$id]);
+        $pdo->prepare('DELETE FROM radar_alerts WHERE listing_id = ?')->execute([$id]);
         $pdo->prepare('DELETE FROM radar_listings WHERE id = ?')->execute([$id]);
     }
 
     public static function valuate(int $id): void
     {
         $listing = self::find($id);
-        if ($listing !== null) {
-            self::update($id, Valuator::valuate($listing));
+        if ($listing === null) {
+            return;
         }
+        self::update($id, Valuator::valuate($listing));
+        // İlan detayı okunmuşsa alım analizini de güncel değere göre yenile.
+        $details = Details::data($id);
+        $fresh = $details !== null ? self::find($id) : null;
+        if ($details !== null && $fresh !== null) {
+            Details::saveAnalysis($id, DealAnalyzer::analyze($fresh, $details));
+        }
+    }
+
+    /**
+     * İlan detay sayfasından okunan, sitenin kendi alanlarından gelen değerlerle kaydı günceller (başlık/özetten tahmin edilenlerin önüne geçer).
+     *
+     * @param array<string, mixed> $fields
+     */
+    public static function override(int $id, array $fields): void
+    {
+        $existing = self::find($id);
+        if ($existing === null) {
+            return;
+        }
+        $changes = [];
+        foreach ($fields as $field => $value) {
+            if (in_array($field, self::FIELDS, true) && $value !== null && $value !== '' && $field !== 'price') {
+                $changes[$field] = $value;
+            }
+        }
+        if (!empty($fields['urgent'])) {
+            $changes['urgent'] = 1;
+        }
+        $merged = $changes + $existing;
+        $changes['model_key'] = ListingParser::modelKey($merged['model']);
+        $changes['search_text'] = self::searchText($merged);
+        $changes['needs_valuation'] = 1;
+        $changes['updated_at'] = now();
+        self::update($id, $changes);
     }
 
     /** Değerlemesi bekleyen kayıtları sırayla işler; süre dolunca durur. */

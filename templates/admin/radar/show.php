@@ -5,6 +5,7 @@
  * @var list<string> $notes
  * @var array<string, list<string|int>> $options
  * @var string|null $notice
+ * @var array{data: array<string, mixed>, analysis: ?array<string, mixed>, raw: ?array<string, mixed>, updated_at: string}|null $details
  */
 use Ozoto\Radar\Listings;
 
@@ -38,6 +39,36 @@ $val = static fn (string $k): string => e((string) ($l[$k] ?? ''));
     <div class="stat <?= $l['discount_pct'] !== null && (float) $l['discount_pct'] > 0 ? 'stat-hot' : '' ?>"><span class="stat-value"><?= e(radar_discount($l['discount_pct'])) ?></span><span class="stat-label">Piyasaya göre</span></div>
     <div class="stat"><span class="stat-value"><?= e(format_tl($l['tsb_value'] !== null ? (int) $l['tsb_value'] : null)) ?></span><span class="stat-label">TSB kasko değeri</span></div>
   </div>
+
+  <?php $a = $details['analysis'] ?? null; ?>
+  <?php if ($a): ?>
+    <section class="form-card analysis">
+      <div class="analysis-head">
+        <span class="verdict verdict-<?= e((string) $a['verdict']) ?><?= !empty($a['risky']) ? ' verdict-risky' : '' ?>"><?= e((string) $a['verdict_label']) ?></span>
+        <p><strong><?= e((string) $a['headline']) ?></strong></p>
+      </div>
+      <div class="analysis-grid">
+        <?php foreach ($a['blocks'] as $block): ?>
+          <div class="analysis-block<?= $block['type'] === 'text' ? ' analysis-wide' : '' ?>">
+            <h3><?= e((string) $block['title']) ?></h3>
+            <?php if ($block['type'] === 'kv'): ?>
+              <table class="kv"><?php foreach ($block['rows'] as [$k, $v]): ?><tr><td><?= e((string) $k) ?></td><td><?= e((string) $v) ?></td></tr><?php endforeach ?></table>
+            <?php elseif ($block['type'] === 'list'): ?>
+              <ul class="levels"><?php foreach ($block['items'] as $item): ?><li class="lvl-<?= e((string) $item['level']) ?>"><?= e((string) $item['text']) ?></li><?php endforeach ?></ul>
+            <?php else: ?>
+              <?php foreach ($block['paragraphs'] as $paragraph): ?><p><?= e((string) $paragraph) ?></p><?php endforeach ?>
+            <?php endif ?>
+          </div>
+        <?php endforeach ?>
+      </div>
+      <details>
+        <summary class="small muted">İlan sayfasından okunan veriler (<?= e(format_date((string) $details['updated_at'])) ?>)</summary>
+        <textarea class="code-input" rows="10" readonly><?= e((string) json_encode($details['data'], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)) ?></textarea>
+      </details>
+    </section>
+  <?php else: ?>
+    <p class="muted small">Eksper analizi için ilanı tarayıcı eklentisi açıkken bir kez açın; araç bilgileri, boya-değişen ve tramer okunup burada gösterilir.</p>
+  <?php endif ?>
 
   <div class="detail-grid">
     <div class="stack">
