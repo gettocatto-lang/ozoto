@@ -63,6 +63,7 @@ $router->post('/yonetim/radar/eposta', [RadarController::class, 'saveMailSetting
 $router->post('/yonetim/radar/eposta-test', [RadarController::class, 'testMail']);
 $router->post('/yonetim/radar/eposta-onizle', [RadarController::class, 'previewMail']);
 $router->get('/yonetim/radar/eposta-kutusu', [RadarController::class, 'mailbox']);
+$router->get('/yonetim/radar/linkler', [RadarController::class, 'links']);
 $router->post('/yonetim/radar/telegram', [RadarController::class, 'saveTelegram']);
 $router->post('/yonetim/radar/kar-ayarlari', [RadarController::class, 'saveDeal']);
 $router->post('/yonetim/radar/telegram-bagla', [RadarController::class, 'linkTelegram']);

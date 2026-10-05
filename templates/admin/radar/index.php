@@ -36,6 +36,7 @@ $sort = $f['sirala'] ?? 'puan';
         <?= csrf_field() ?>
         <button class="btn btn-ghost btn-sm" type="submit">Şimdi tara</button>
       </form>
+      <a class="btn btn-ghost btn-sm" href="/yonetim/radar/linkler">Kelepir linkleri</a>
       <a class="btn btn-primary btn-sm" href="/yonetim/radar/ekle">+ İlan ekle</a>
     </div>
   </div>
