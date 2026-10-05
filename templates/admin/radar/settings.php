@@ -10,6 +10,7 @@
  * @var string $cronUrl
  * @var list<array<string, mixed>> $runs
  * @var string|null $notice
+ * @var array<string, mixed>|null $probe
  */
 $sourceNames = ['eposta' => 'E-posta', 'arama' => 'Arama motoru', 'eklenti' => 'Eklenti'];
 ?>
@@ -173,6 +174,32 @@ $sourceNames = ['eposta' => 'E-posta', 'arama' => 'Arama motoru', 'eklenti' => '
       <details>
         <summary class="small">Ayrıntılı yanıt (Claude'a göndermek için kopyalayın)</summary>
         <textarea class="code-input" rows="10" readonly><?= e(json_encode($diagnostics, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)) ?></textarea>
+      </details>
+    <?php endif ?>
+
+    <form class="probe" method="post" action="/yonetim/radar/kaynak-incele" id="inceleme">
+      <?= csrf_field() ?>
+      <h3 class="small">Sayfa incele</h3>
+      <p class="muted small">Toplayıcıyı yazmak için kaynağın bir sayfasını bu sunucudan indirir; yüklediği betikleri ve içinde geçen veri adreslerini çıkarır.
+        Yalnızca kamu ihale sitelerine (<?= e(implode(', ', \Ozoto\Radar\Diagnostics::PROBE_HOSTS)) ?>) istek atar.</p>
+      <div class="grid-2">
+        <label class="field"><span>Adres</span><input type="url" name="url" value="<?= e((string) ($probe['url'] ?? 'https://www.eihale.gov.tr/')) ?>" required></label>
+        <label class="field"><span>Yöntem</span>
+          <select name="method">
+            <option value="GET"<?= selected((string) ($probe['method'] ?? 'GET'), 'GET') ?>>GET</option>
+            <option value="POST"<?= selected((string) ($probe['method'] ?? 'GET'), 'POST') ?>>POST (JSON gövde)</option>
+          </select>
+        </label>
+      </div>
+      <label class="field"><span>POST gövdesi (JSON, isteğe bağlı)</span><textarea class="code-input" name="body" rows="2"></textarea></label>
+      <button class="btn btn-ghost" type="submit">İncele</button>
+    </form>
+    <?php if ($probe): ?>
+      <p class="muted small">Son inceleme: <?= e(format_date((string) $probe['at'])) ?> · <?= e((string) $probe['method']) ?> <?= e((string) $probe['url']) ?> ·
+        HTTP <?= (int) $probe['status'] ?> · <?= number_format((int) $probe['length'], 0, ',', '.') ?> bayt · <?= count($probe['endpoints']) ?> adres</p>
+      <details>
+        <summary class="small">İnceleme sonucu (Claude'a göndermek için kopyalayın)</summary>
+        <textarea class="code-input" rows="10" readonly data-probe><?= e(json_encode($probe, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)) ?></textarea>
       </details>
     <?php endif ?>
   </section>

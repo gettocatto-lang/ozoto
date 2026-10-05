@@ -172,6 +172,7 @@ final class RadarController
             ],
             'preview' => Session::pull('preview'),
             'diagnostics' => Diagnostics::last(),
+            'probe' => Diagnostics::lastProbe(),
             'extension' => [
                 'configured' => (string) Settings::get('extension_token_hash', '') !== '',
                 'token' => Session::pull('extension_token'),
@@ -293,6 +294,24 @@ final class RadarController
         $ok = count(array_filter(Diagnostics::run(), static fn (array $r): bool => $r['status'] >= 200 && $r['status'] < 300));
         Session::flash('notice', 'Kaynak testi bitti: ' . $ok . ' kaynak erişilebilir. Sonuçlar aşağıda.');
         redirect('/yonetim/radar/ayarlar#kaynaklar');
+    }
+
+    /** Kamu ihale sitesinin bir sayfasını sunucudan inceler (toplayıcı yazmak için yapı ve veri adresleri). */
+    public function probe(): void
+    {
+        Auth::require();
+        if (!Csrf::valid()) {
+            abort(419);
+        }
+        @set_time_limit(60);
+        $method = ($_POST['method'] ?? '') === 'POST' ? 'POST' : 'GET';
+        try {
+            $result = Diagnostics::probe(trim((string) ($_POST['url'] ?? '')), $method, (string) ($_POST['body'] ?? ''));
+            Session::flash('notice', 'İnceleme bitti: HTTP ' . $result['status'] . ', ' . count($result['endpoints']) . ' adres bulundu.');
+        } catch (\Throwable $e) {
+            Session::flash('notice', 'İncelenemedi: ' . $e->getMessage());
+        }
+        redirect('/yonetim/radar/ayarlar#inceleme');
     }
 
     /** Eklenti için yeni anahtar üretir; anahtar yalnızca bir kez gösterilir, veritabanında özeti tutulur. */
