@@ -58,6 +58,64 @@ final class EmailNotifications
     }
 
     /**
+     * Kutudaki son e-postalar (en yeni önce): üyelik doğrulama linkleri ve kodları ile bildirim biçimini görmek için.
+     * Okundu bayrağına dokunmaz.
+     *
+     * @return list<array{date: string, from: string, subject: string, snippet: string, links: list<array{text: string, url: string}>}>
+     */
+    public static function recent(int $limit = 10): array
+    {
+        $client = self::client();
+        $client->connect();
+        try {
+            $client->login((string) Settings::get('mail_user'), Settings::secret('mail_pass'));
+            $client->select((string) (Settings::get('mail_folder') ?: 'INBOX'));
+            $messages = [];
+            foreach (array_reverse(array_slice($client->search('ALL'), -$limit)) as $uid) {
+                $raw = $client->fetch($uid);
+                if ($raw === null) {
+                    continue;
+                }
+                $message = MimeMessage::parse($raw);
+                $html = (string) $message->html();
+                $text = (string) $message->text();
+
+                $links = [];
+                if ($html !== '' && preg_match_all('#<a\s[^>]*href\s*=\s*["\']([^"\']+)["\'][^>]*>(.*?)</a>#is', $html, $m, PREG_SET_ORDER) > 0) {
+                    foreach ($m as [, $href, $label]) {
+                        $links[] = ['text' => trim(preg_replace('/\s+/u', ' ', html_entity_decode(strip_tags($label), ENT_QUOTES | ENT_HTML5, 'UTF-8')) ?? ''), 'url' => html_entity_decode($href, ENT_QUOTES | ENT_HTML5, 'UTF-8')];
+                    }
+                }
+                if ($text !== '' && preg_match_all('#https?://[^\s<>"\']+#i', $text, $m) > 0) {
+                    foreach ($m[0] as $url) {
+                        $links[] = ['text' => '', 'url' => rtrim($url, '.,);')];
+                    }
+                }
+                $seen = [];
+                $links = array_values(array_filter($links, static function (array $link) use (&$seen): bool {
+                    if (!ListingParser::isWebUrl($link['url']) || isset($seen[$link['url']])) {
+                        return false;
+                    }
+                    $seen[$link['url']] = true;
+                    return true;
+                }));
+
+                $plain = $text !== '' ? $text : html_entity_decode(strip_tags((string) preg_replace('#<(style|script)\b.*?</\1>#is', '', $html)), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                $messages[] = [
+                    'date' => $message->header('Date'),
+                    'from' => $message->from(),
+                    'subject' => $message->subject(),
+                    'snippet' => mb_substr(trim((string) preg_replace('/\s+/u', ' ', $plain)), 0, 600),
+                    'links' => array_slice($links, 0, 40),
+                ];
+            }
+            return $messages;
+        } finally {
+            $client->logout();
+        }
+    }
+
+    /**
      * Okunmamış bildirimleri işler ve okundu olarak işaretler.
      *
      * @return array{emails: int, found: int, added: int, errors: list<string>}

@@ -57,6 +57,7 @@ $sourceNames = ['eposta' => 'E-posta', 'arama' => 'Arama motoru', 'eklenti' => '
     <div class="btn-row-left">
       <button class="btn btn-primary" type="submit">Kaydet</button>
       <button class="btn btn-ghost" type="submit" form="mail-test">Bağlantıyı test et</button>
+      <a class="btn btn-ghost" href="/yonetim/radar/eposta-kutusu">Kutudaki son e-postalar</a>
     </div>
   </form>
   <form id="mail-test" method="post" action="/yonetim/radar/eposta-test"><?= csrf_field() ?></form>

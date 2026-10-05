@@ -123,7 +123,7 @@ final class AccountController
     private function render(array $user, array $site, array $errors, int $status = 200): void
     {
         view('admin/account', [
-            'title' => 'Hesap ve site – Ozoto Yönetim',
+            'title' => 'Hesap ve site – Öz Oto Yönetim',
             'user' => $user,
             'site' => $site,
             'errors' => $errors,
