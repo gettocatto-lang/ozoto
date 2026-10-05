@@ -12,6 +12,7 @@
  * @var string|null $notice
  * @var array<string, mixed>|null $probe
  * @var array<string, int> $deal
+ * @var array{auto: bool, generated: int, total: int, budget: int, used: int, per_run: int} $search
  * @var array{token_set: bool, bot: string, code: string, chat_name: string, linked: bool, enabled: bool, min_score: int} $telegram
  */
 $sourceNames = ['eposta' => 'E-posta', 'arama' => 'Arama motoru', 'eklenti' => 'Eklenti'];
@@ -186,7 +187,7 @@ $sourceNames = ['eposta' => 'E-posta', 'arama' => 'Arama motoru', 'eklenti' => '
     <p class="muted small">
       Brave Search'ün resmî API'si ile arama motorunun dizinindeki ilan linkleri alınır. Dizine giren ilanlar sınırlı ve gecikmelidir;
       e-posta bildirimlerinin yerini tutmaz. Anahtar: <a href="https://api-dashboard.search.brave.com/" target="_blank" rel="noopener noreferrer">api-dashboard.search.brave.com</a>
-      → "Search" planı (ayda yaklaşık 1.000 sorgu ücretsiz).
+      → "Search" planı. Ücretsiz başlangıç kotası ve kullandıkça ödeme var; güncel fiyatı sitede kontrol edin.
     </p>
     <label class="field">
       <span>API anahtarı <?= $apiKeySet ? '(kayıtlı — değiştirmek için yenisini yazın)' : '' ?></span>
@@ -194,10 +195,19 @@ $sourceNames = ['eposta' => 'E-posta', 'arama' => 'Arama motoru', 'eklenti' => '
     </label>
     <?php if ($apiKeySet): ?><label class="check"><input type="checkbox" name="search_api_key_clear" value="1"><span>Kayıtlı anahtarı sil</span></label><?php endif ?>
     <label class="check"><input type="checkbox" name="search_enabled" value="1"<?= $enabled ? ' checked' : '' ?>><span>Otomatik taramayı aç</span></label>
+    <label class="check"><input type="checkbox" name="search_auto" value="1"<?= $search['auto'] ? ' checked' : '' ?>>
+      <span>Popüler modeller için otomatik sorgular (<?= count(\Ozoto\Radar\Sources\SearchEngine::MODELS) ?> model × "acil / ihtiyaçtan / hasarlı / sahibinden acil / nakit ihtiyacından" × sahibinden, arabam, letgo = <?= (int) $search['generated'] ?> sorgu, sırayla döner)</span></label>
     <label class="field">
-      <span>Arama sorguları (her satıra bir tane; her taramada sırayla en fazla 10'u çalışır)</span>
-      <textarea name="search_queries" rows="8"><?= e($queries) ?></textarea>
+      <span>Ek sorgular (her satıra bir tane; otomatik sorgularla birlikte sırayla çalışır)</span>
+      <textarea name="search_queries" rows="6"><?= e($queries) ?></textarea>
     </label>
+    <div class="grid-2">
+      <label class="field"><span>Aylık sorgu bütçesi (API kredisi)</span><input type="text" name="search_budget" value="<?= e(format_number((int) $search['budget'])) ?>" inputmode="numeric"></label>
+      <p class="small muted">Bu ay kullanılan: <strong><?= e(format_number((int) $search['used'])) ?></strong> / <?= e(format_number((int) $search['budget'])) ?> ·
+        bir taramada <strong><?= (int) $search['per_run'] ?></strong> sorgu · toplam <?= (int) $search['total'] ?> sorgu
+        <?= $search['per_run'] > 0 ? '≈ ' . (int) ceil($search['total'] / max(1, $search['per_run'] * max(1, intdiv(1440, max(15, $interval))))) . ' günde bir tur' : '' ?>.
+        Bütçe aya eşit yayılır, aşılmaz.</p>
+    </div>
     <div class="grid-2">
       <label class="field"><span>Ne kadar yeni ilanlar?</span>
         <select name="search_freshness">

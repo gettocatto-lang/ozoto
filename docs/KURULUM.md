@@ -92,8 +92,11 @@ hasar, vites, yakıt, "acil", "ihale" filtreleri ve kayıtlı aramalar vardır.
   2. Panel → **Radar ayarları** → anahtarı yapıştır, "Otomatik taramayı aç"ı işaretle, kaydet.
   3. Ayarlar sayfasındaki **zamanlanmış görev adresini** kopyala. Plesk → ozoto.online → **Scheduled Tasks → Add Task →
      Fetch a URL** → adresi yapıştır → sıklık **her 5 dakika** (Plesk Windows `/` kabul etmez: `0,5,10,15,20,25,30,35,40,45,50,55 * * * *`) → kaydet. E-postalar her çalışmada,
-     arama motoru ayarlardaki aralıkta (varsayılan 180 dk) çalışır.
+     arama motoru ayarlardaki aralıkta (varsayılan 60 dk) çalışır.
   4. (Alternatif) "Run a PHP script" seçip `site\bin\radar.php` yolunu da verebilirsin.
+- **Otomatik sorgular:** açıkken popüler 46 model × "acil / ihtiyaçtan / hasarlı / sahibinden acil / nakit ihtiyacından" ×
+  sahibinden, arabam, letgo için 230 sorgu üretilir ve sırayla döner (ek sorgular da yazılabilir). **Aylık sorgu bütçesi** aya eşit
+  yayılır ve aşılmaz; panelde bu ay kullanılan ve bir turun kaç günde tamamlandığı görünür.
 - Tarama ilan sitelerine istek atmaz; arama motorunun dizinindeki ilan linklerini, başlıklarını ve özetlerini alır.
   Satıcı adı/telefonu alınmaz. Fiyatı özette olmayan kayıtlar "fiyat bilinmiyor" olarak gelir; ilana bakıp detay sayfasından tamamla.
 
